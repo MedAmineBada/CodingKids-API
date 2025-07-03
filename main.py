@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from db.dbconfig import init_db
+from dbconfig import init_db
 
 
 @asynccontextmanager
