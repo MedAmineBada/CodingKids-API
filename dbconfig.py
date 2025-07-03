@@ -4,7 +4,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlmodel import SQLModel
 
 from envconfig import EnvFile
-from models.qrcode import QRCode
 
 DB_URL_USER = (
     f"mysql+asyncmy://{EnvFile.DB_USER}:"
