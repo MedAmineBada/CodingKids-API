@@ -1,22 +1,27 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
-from starlette.exceptions import HTTPException
 from starlette.requests import Request
-from starlette.responses import HTMLResponse
+from starlette.responses import JSONResponse
 
-import routers.users as users
+from db.dbconfig import init_db
 
-app = FastAPI()
 
-app.include_router(users.router)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await init_db()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.exception_handler(404)
-async def not_found(request: Request, exc: HTTPException):
-    return HTMLResponse(
-        content="""
-        <html><head><title>Page Not Found</title></head>
-        <body><h1>404 – Page Not Found</h1>
-               <p>We can't find what you're looking for.</p></body></html>
-        """,
+async def not_found(request: Request, exc):
+    return JSONResponse(
         status_code=404,
+        content={
+            "error": "route does not exist",
+            "message": "The route you are looking for does not exist.",
+        },
     )
