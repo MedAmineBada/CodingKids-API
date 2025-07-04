@@ -1,8 +1,10 @@
 from fastapi import APIRouter
+from v1.services.qrcode_service import gen
+from v1.models.student import Student
 
 router = APIRouter(prefix="/qrcode", tags=["qrcode"])
 
 
 @router.post("/generate", tags=["qrcode"])
-def return_qrcode():
-    return {"Success": "Yay!"}
+def generate_qrcode(student: Student):
+    gen()

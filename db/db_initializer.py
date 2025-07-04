@@ -1,5 +1,7 @@
 from sqlmodel import SQLModel
 from .engine import creator_engine
+
+# Model imports, necessary so that the engine creates the tables if missing
 from v1.models.qrcode import QRCode
 from v1.models.student import Student
 
