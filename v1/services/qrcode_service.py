@@ -5,8 +5,10 @@ from qrcode.image.styles.moduledrawers import (
     RoundedModuleDrawer,
 )
 
+from envconfig import EnvFile
 
-def gen():
+
+def gen(data: str):
     qr = qrcode.QRCode(
         version=None,
         error_correction=qrcode.ERROR_CORRECT_H,
@@ -23,6 +25,6 @@ def gen():
             back_color=(255, 255, 255),
         ),
         module_drawer=RoundedModuleDrawer(),
-        embeded_image_path="static/ck_logo.png",
+        embeded_image_path=EnvFile.CK_LOGO_DIR,
     )
-    img.save(f"static/QRCodes/example.png")
+    img.save(f"{EnvFile.QR_CODE_SAVE_DIR}/{data}.png")

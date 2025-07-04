@@ -7,4 +7,4 @@ router = APIRouter(prefix="/qrcode", tags=["qrcode"])
 
 @router.post("/generate", tags=["qrcode"])
 def generate_qrcode(student: Student):
-    gen()
+    gen("Student1")
