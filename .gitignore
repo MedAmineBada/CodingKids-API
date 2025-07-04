@@ -4,4 +4,5 @@ __pycache__/
 *.py[cod]
 .env
 *.env
-static/QRCodes/*
+static/qr_codes/*
+!/static/qr_codes/.gitkeep
