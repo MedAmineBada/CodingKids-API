@@ -13,6 +13,6 @@ def verif_tel_number(num: str) -> bool:
         return False
     if not stripped.isdigit():
         return False
-    if len(stripped) != 9:
+    if len(stripped) != 8:
         return False
     return True

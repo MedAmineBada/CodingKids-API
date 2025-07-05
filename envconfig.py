@@ -15,6 +15,8 @@ class EnvFile(BaseSettings):
     QR_CODE_SAVE_DIR: str
     CK_LOGO_DIR: str
 
+    ENCRYPTION_KEY: str
+
     class Config:
         env_file = ".env"
 
