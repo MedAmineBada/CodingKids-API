@@ -5,6 +5,7 @@ Module for handling QR Code generation and scanning.
 import base64
 import hashlib
 import os
+import threading
 import time
 
 import qrcode

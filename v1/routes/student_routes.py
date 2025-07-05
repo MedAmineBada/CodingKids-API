@@ -2,11 +2,14 @@
 Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Modification.
 """
 
+import threading
+
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
+from starlette.concurrency import run_in_threadpool
 
 from db.session import get_session
 from v1.models.qrcode import QRCode
@@ -25,7 +28,7 @@ async def add_user(student: Student, session: AsyncSession = Depends(get_session
         session.add(student)
         await session.flush()
 
-        qr_img = generate_qrcode(student.name, student.id)
+        qr_img = await run_in_threadpool(generate_qrcode, student.name, student.id)
         qr_code = QRCode()
         qr_code.url = qr_img
         qr_code.student = student.id
