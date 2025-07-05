@@ -1,3 +1,9 @@
+"""
+Environment Variables configuration module,
+
+Defines Environment Variables imported from the .env file.
+"""
+
 from pydantic_settings import BaseSettings
 
 

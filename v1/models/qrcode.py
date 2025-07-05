@@ -1,3 +1,9 @@
+"""
+QR Code Table Model
+
+Defines the `QRCode` table using SQLModel.
+"""
+
 from typing import Optional
 
 from sqlalchemy import Column, Integer, ForeignKey
@@ -11,6 +17,8 @@ class QRCode(SQLModel, table=True):
         index=True,
     )
     url: str = Field(default=None, nullable=False)
+
+    # FK to Student table with cascade on delete/update
     student: Optional[int] = Field(
         default=None,
         sa_column=Column(

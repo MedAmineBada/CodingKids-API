@@ -1,3 +1,7 @@
+"""
+Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Modification.
+"""
+
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,11 +13,14 @@ from v1.models.qrcode import QRCode
 from v1.models.student import Student
 from v1.services.qrcode_service import generate_qrcode, QRCodeGenerationError
 
-router = APIRouter(prefix="/users", tags=["Users"])
+router = APIRouter(prefix="/students", tags=["Students"])
 
 
-@router.post("/add", status_code=status.HTTP_201_CREATED)
+@router.post("/add", tags=["Students"], status_code=status.HTTP_201_CREATED)
 async def add_user(student: Student, session: AsyncSession = Depends(get_session)):
+    """
+    Creates a Student and his QR code, then insert both into the database.
+    """
     try:
         session.add(student)
         await session.flush()
