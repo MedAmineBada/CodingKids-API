@@ -136,3 +136,30 @@ async def delete_student(student_id: int, session: AsyncSession):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred.",
         )
+
+
+async def update_user(student_id: int, data: StudentCreate, session: AsyncSession):
+    try:
+        student = await session.get(Student, student_id)
+        if not student:
+            raise StudentNotFound()
+
+        student_data = data.model_dump(exclude_unset=True)
+
+        for key, value in student_data.items():
+            setattr(student, key, value)
+
+        session.add(student)
+        await session.commit()
+
+        return {"Success": "User updated."}
+
+    except StudentNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
+        )
+    except:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred.",
+        )

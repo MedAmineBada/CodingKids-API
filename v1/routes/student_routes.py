@@ -9,7 +9,12 @@ from starlette import status
 
 from db.session import get_session
 from v1.models.student import StudentCreate, StudentRead
-from v1.services.student_service import add_student, get_student, delete_student
+from v1.services.student_service import (
+    add_student,
+    get_student,
+    delete_student,
+    update_user,
+)
 
 router = APIRouter(prefix="/students", tags=["Students"])
 
@@ -36,3 +41,10 @@ async def delete(id: int, session: AsyncSession = Depends(get_session)):
     Handles the deletion of a student.
     """
     return await delete_student(id, session)
+
+
+@router.patch("/update/{id}", status_code=status.HTTP_200_OK, tags=["Students"])
+async def update(
+    id: int, new_data: StudentCreate, session: AsyncSession = Depends(get_session)
+):
+    return await update_user(id, new_data, session)
