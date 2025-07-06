@@ -2,9 +2,7 @@
 Main application module.
 
 This module initializes the FastAPI app, sets up the database connection
-on startup,includes the versioned API routes, and defines custom exception
-handlers for 404 errors for undefined routes.
-"""
+on startup,includes the versioned API routes."""
 
 from contextlib import asynccontextmanager
 
@@ -29,14 +27,3 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
 app.include_router(router.router)
-
-
-@app.exception_handler(404)
-async def not_found(request: Request, exc):
-    return JSONResponse(
-        status_code=404,
-        content={
-            "Error": "404 NOT FOUND",
-            "Message": "The route you are looking for does not exist.",
-        },
-    )

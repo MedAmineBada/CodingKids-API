@@ -2,18 +2,22 @@
 Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Modification.
 """
 
+import json
+from io import BytesIO
+
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
-from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 from starlette.concurrency import run_in_threadpool
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, Response
+from aiohttp import MultipartWriter
 
 from db.session import get_session
 from v1.models.qrcode import QRCode
-from v1.models.student import Student, StudentRead, StudentCreate
+from v1.models.student import Student, StudentCreate, StudentRead
 from v1.services.qrcode_service import generate_qrcode, QRCodeGenerationError
 
 router = APIRouter(prefix="/students", tags=["Students"])
@@ -66,18 +70,27 @@ async def add_user(
         )
 
 
+class StudentNotFound(Exception):
+    pass
+
+
 @router.get("/{id}", response_model=StudentRead, tags=["Students"])
 async def get_user(id: int, session: AsyncSession = Depends(get_session)):
     """
-    Retrieves a Student by his ID and returns it.
+    Retrieves a Student by ID and returns a multipart response:
+    - JSON student data
+    - WEBP QR Code image
     """
     try:
         student = await session.get(Student, id)
         if not student:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Student not found"
-            )
+            raise StudentNotFound()
+
         return student
+    except StudentNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
+        )
     except Exception as e:
         print(e)
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
