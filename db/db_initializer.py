@@ -10,7 +10,6 @@ from sqlmodel import SQLModel
 # Import models to ensure they are registered with SQLModel.metadata
 from v1.models.qrcode import QRCode
 from v1.models.student import Student
-
 from .engine import creator_engine
 
 # to keep formatters from removing their imports

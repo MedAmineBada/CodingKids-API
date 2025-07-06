@@ -7,7 +7,13 @@ from starlette.responses import FileResponse
 
 from v1.models.qrcode import QRCode
 from v1.models.student import Student, StudentCreate
-from v1.services.qrcode_service import generate_qrcode, QRCodeGenerationError
+from v1.services.qrcode_service import (
+    generate_qrcode,
+    QRCodeGenerationError,
+    QRCodeNotFoundInDB,
+    QRCodeDeletionError,
+    delete_qr,
+)
 
 
 async def add_student(new_student: StudentCreate, session: AsyncSession):
@@ -16,6 +22,7 @@ async def add_student(new_student: StudentCreate, session: AsyncSession):
     """
     try:
         db_student = Student.model_validate(new_student)
+        db_student.name = db_student.name.title()
         session.add(db_student)
         await session.flush()
 
@@ -49,8 +56,7 @@ async def add_student(new_student: StudentCreate, session: AsyncSession):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error: could not add user.",
         )
-    except Exception as e:
-        print(e)
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred.",
@@ -75,6 +81,58 @@ async def get_student(student_id: int, session: AsyncSession):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
         )
-    except Exception as e:
-        print(e)
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error: could not fetch user.",
+        )
+    except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+async def delete_student(student_id: int, session: AsyncSession):
+    """
+    Deletes a student and his QRCode by his ID.
+    """
+    try:
+        student = await session.get(Student, student_id)
+        if not student:
+            raise StudentNotFound()
+
+        qr_id = student.qrcode
+
+        await session.delete(student)
+        await delete_qr(qr_id, session)
+
+        await session.commit()
+
+        return {"Success": "User deleted."}
+
+    except StudentNotFound:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
+        )
+    except FileNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="QR Code image was not found"
+        )
+    except QRCodeNotFoundInDB:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="QR Code was not found in database",
+        )
+    except QRCodeDeletionError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="QR Code Image could not be deleted",
+        )
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error: could not delete user.",
+        )
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred.",
+        )

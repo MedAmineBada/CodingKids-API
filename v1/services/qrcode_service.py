@@ -13,8 +13,10 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from envconfig import EnvFile
+from v1.models.qrcode import QRCode
 
 
 def get_key() -> bytes:
@@ -120,3 +122,28 @@ def generate_qrcode(data: str, student_id: int) -> str:
         raise QRCodeGenerationError(
             f"Could not generate QR code for user {student_id}: {e}"
         )
+
+
+class QRCodeDeletionError(Exception):
+    pass
+
+
+class QRCodeNotFoundInDB(Exception):
+    pass
+
+
+async def delete_qr(id: int, session: AsyncSession):
+    try:
+        qrcode = await session.get(QRCode, id)
+        if not qrcode:
+            raise QRCodeNotFoundInDB()
+
+        path = qrcode.url
+        os.remove(path)
+
+    except FileNotFoundError:
+        raise FileNotFoundError()
+    except QRCodeNotFoundInDB:
+        raise QRCodeNotFoundInDB()
+    except:
+        raise QRCodeDeletionError()
