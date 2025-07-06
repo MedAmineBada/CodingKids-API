@@ -61,10 +61,6 @@ def decrypt(data: str) -> str:
     return plaintext.decode("utf-8")
 
 
-def qr_temp_path(student_id: int) -> str:
-    return f"{EnvFile.TEMP_QR_CODE_DIR}/TEMPQR-{student_id}-{time.time()}"
-
-
 def compress_qr(src: str, dest: str):
     with Image.open(src) as img:
         img.save(
@@ -112,7 +108,7 @@ def generate_qrcode(data: str, student_id: int) -> str:
         )
 
         # Create a file path for temporary image and save it
-        path = qr_temp_path(student_id) + ".webp"
+        path = f"{EnvFile.QR_CODE_SAVE_DIR}/TEMP-{student_id}-{time.time()}.webp"
         img.save(path)
 
         # Compress the image, return its path and remove the temporary image.
