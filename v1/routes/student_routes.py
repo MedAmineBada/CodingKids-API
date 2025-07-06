@@ -13,35 +13,34 @@ from starlette.responses import FileResponse
 
 from db.session import get_session
 from v1.models.qrcode import QRCode
-from v1.models.student import Student, StudentRead
+from v1.models.student import Student, StudentRead, StudentCreate
 from v1.services.qrcode_service import generate_qrcode, QRCodeGenerationError
 
 router = APIRouter(prefix="/students", tags=["Students"])
 
 
-class ForbiddenFields(Exception):
-    pass
-
-
 @router.post("/add", tags=["Students"])
-async def add_user(student: Student, session: AsyncSession = Depends(get_session)):
+async def add_user(
+    student: StudentCreate, session: AsyncSession = Depends(get_session)
+):
     """
     Creates a Student and his QR code, then insert both into the database.
     """
     try:
-        if student.id or student.qrcode:
-            raise ForbiddenFields()
-        session.add(student)
+        db_student = Student.model_validate(student)
+        session.add(db_student)
         await session.flush()
 
-        qr_img_path = await run_in_threadpool(generate_qrcode, student.name, student.id)
+        qr_img_path = await run_in_threadpool(
+            generate_qrcode, db_student.name, db_student.id
+        )
         qr_code = QRCode()
         qr_code.url = qr_img_path
-        qr_code.student = student.id
+        qr_code.student = db_student.id
         session.add(qr_code)
         await session.flush()
 
-        student.qrcode = qr_code.id
+        db_student.qrcode = qr_code.id
         await session.commit()
 
         return FileResponse(
@@ -49,11 +48,7 @@ async def add_user(student: Student, session: AsyncSession = Depends(get_session
             media_type="image/webp",
             path=qr_img_path,
         )
-    except ForbiddenFields:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Id and qrcode fields are forbidden.",
-        )
+
     except QRCodeGenerationError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -76,7 +71,6 @@ async def get_user(id: int, session: AsyncSession = Depends(get_session)):
     """
     Retrieves a Student by his ID and returns it.
     """
-
     try:
         student = await session.get(Student, id)
         if not student:

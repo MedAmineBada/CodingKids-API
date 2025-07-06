@@ -7,29 +7,20 @@ Defines the `Student` table with core fields and validation logic.
 from typing import Optional
 
 from fastapi.openapi.models import Contact
-from pydantic import model_validator, ConfigDict
+from pydantic import model_validator, ConfigDict, BaseModel
 from sqlalchemy import ForeignKey, Column, Integer
 from sqlmodel import Field, SQLModel
-from starlette.config import Config
 
 from v1.utils import verif_str, verif_tel_number
 
 
-class Student(SQLModel, table=True):
-    id: Optional[int] = Field(default=None, primary_key=True, index=True)
-    name: str = Field(..., nullable=False)
-    tel1: str = Field(..., max_length=8, nullable=False)
-    tel2: str = Field(..., max_length=8, nullable=False)
+class StudentCreate(BaseModel):
+    name: str
+    tel1: str
+    tel2: str
 
-    # FK to QRCode table with cascade on delete/update
-    qrcode: Optional[int] = Field(
-        default=None,
-        sa_column=Column(
-            Integer,
-            ForeignKey("qrcode.id", ondelete="CASCADE", onupdate="CASCADE"),
-            nullable=True,
-        ),
-    )
+    class Config:
+        orm_mode = True
 
     @model_validator(mode="after")
     @classmethod
@@ -56,8 +47,27 @@ class Student(SQLModel, table=True):
         return m
 
 
-class StudentRead(SQLModel):
+class StudentRead(BaseModel):
     name: str
     tel1: str
     tel2: str
-    model_config = ConfigDict(from_attributes=True)
+
+    class Config:
+        orm_mode = True
+
+
+class Student(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True, index=True)
+    name: str = Field(..., nullable=False)
+    tel1: str = Field(..., max_length=8, nullable=False)
+    tel2: str = Field(..., max_length=8, nullable=False)
+
+    # FK to QRCode table with cascade on delete/update
+    qrcode: Optional[int] = Field(
+        default=None,
+        sa_column=Column(
+            Integer,
+            ForeignKey("qrcode.id", ondelete="CASCADE", onupdate="CASCADE"),
+            nullable=True,
+        ),
+    )
