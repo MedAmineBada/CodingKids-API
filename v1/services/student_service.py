@@ -61,12 +61,12 @@ class StudentNotFound(Exception):
     pass
 
 
-async def get_student(id: int, session: AsyncSession):
+async def get_student(student_id: int, session: AsyncSession):
     """
     Retrieves a Student by ID and returns his data.
     """
     try:
-        student = await session.get(Student, id)
+        student = await session.get(Student, student_id)
         if not student:
             raise StudentNotFound()
 
