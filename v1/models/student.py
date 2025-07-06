@@ -7,9 +7,10 @@ Defines the `Student` table with core fields and validation logic.
 from typing import Optional
 
 from fastapi.openapi.models import Contact
-from pydantic import model_validator
+from pydantic import model_validator, ConfigDict
 from sqlalchemy import ForeignKey, Column, Integer
 from sqlmodel import Field, SQLModel
+from starlette.config import Config
 
 from v1.utils import verif_str, verif_tel_number
 
@@ -42,8 +43,6 @@ class Student(SQLModel, table=True):
         """
 
         missing = [f for f in ("name", "tel1", "tel2") if getattr(m, f) is None]
-        if getattr(m, "id") or getattr(m, "qrcode"):
-            raise ValueError(f"id and qrcode fields are forbidden.")
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
         if not verif_str(getattr(m, "name")):
@@ -55,3 +54,10 @@ class Student(SQLModel, table=True):
         if getattr(m, "tel1") == getattr(m, "tel2"):
             raise ValueError("Telephone numbers should not match")
         return m
+
+
+class StudentRead(SQLModel):
+    name: str
+    tel1: str
+    tel2: str
+    model_config = ConfigDict(from_attributes=True)
