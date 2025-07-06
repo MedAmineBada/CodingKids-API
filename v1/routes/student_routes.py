@@ -2,16 +2,19 @@
 Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Modification.
 """
 
-import threading
+import time
 
+from PIL import Image
 from fastapi import APIRouter, HTTPException
 from fastapi.params import Depends
 from sqlalchemy.exc import SQLAlchemyError
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 from starlette.concurrency import run_in_threadpool
+from starlette.responses import FileResponse
 
 from db.session import get_session
+from envconfig import EnvFile
 from v1.models.qrcode import QRCode
 from v1.models.student import Student
 from v1.services.qrcode_service import generate_qrcode, QRCodeGenerationError
@@ -19,7 +22,7 @@ from v1.services.qrcode_service import generate_qrcode, QRCodeGenerationError
 router = APIRouter(prefix="/students", tags=["Students"])
 
 
-@router.post("/add", tags=["Students"], status_code=status.HTTP_201_CREATED)
+@router.post("/add", tags=["Students"])
 async def add_user(student: Student, session: AsyncSession = Depends(get_session)):
     """
     Creates a Student and his QR code, then insert both into the database.
@@ -28,18 +31,21 @@ async def add_user(student: Student, session: AsyncSession = Depends(get_session
         session.add(student)
         await session.flush()
 
-        qr_img = await run_in_threadpool(generate_qrcode, student.name, student.id)
+        qr_img_path = await run_in_threadpool(generate_qrcode, student.name, student.id)
         qr_code = QRCode()
-        qr_code.url = qr_img
+        qr_code.url = qr_img_path
         qr_code.student = student.id
         session.add(qr_code)
         await session.flush()
 
         student.qrcode = qr_code.id
         await session.commit()
-        await session.refresh(student)
 
-        return {"Message": "User added and Qr code generated successfully."}
+        return FileResponse(
+            status_code=status.HTTP_201_CREATED,
+            media_type="image/webp",
+            path=qr_img_path,
+        )
 
     except QRCodeGenerationError:
         raise HTTPException(

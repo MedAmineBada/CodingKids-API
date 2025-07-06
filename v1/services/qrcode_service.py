@@ -5,10 +5,10 @@ Module for handling QR Code generation and scanning.
 import base64
 import hashlib
 import os
-import threading
 import time
 
 import qrcode
+from PIL import Image
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import SolidFillColorMask
@@ -61,6 +61,20 @@ def decrypt(data: str) -> str:
     return plaintext.decode("utf-8")
 
 
+def qr_temp_path(student_id: int) -> str:
+    return f"{EnvFile.TEMP_QR_CODE_DIR}/TEMPQR-{student_id}-{time.time()}"
+
+
+def compress_qr(src: str, dest: str):
+    with Image.open(src) as img:
+        img.save(
+            dest,
+            format="WEBP",
+            lossless=True,
+            quality=100,
+        )
+
+
 # A custom error for the QRCode Generator
 class QRCodeGenerationError(Exception):
     pass
@@ -77,7 +91,7 @@ def generate_qrcode(data: str, student_id: int) -> str:
         qr = qrcode.QRCode(
             version=None,  # Auto-adjust size
             error_correction=qrcode.ERROR_CORRECT_H,  # High error correction
-            box_size=16,
+            box_size=10,
             border=1,
             image_factory=StyledPilImage,
             mask_pattern=None,
@@ -97,14 +111,15 @@ def generate_qrcode(data: str, student_id: int) -> str:
             embeded_image_path=EnvFile.CK_LOGO_DIR,
         )
 
-        # Create a unique file path using student ID and timestamp
-        path = (
-            f"{EnvFile.QR_CODE_SAVE_DIR}/Student_{student_id}_QRCode_{time.time()}.png"
-        )
-
-        # Save the QR code image
+        # Create a file path for temporary image and save it
+        path = qr_temp_path(student_id) + ".webp"
         img.save(path)
-        return path
+
+        # Compress the image, return its path and remove the temporary image.
+        comp_qr_path = f"{EnvFile.QR_CODE_SAVE_DIR}/{student_id}-{time.time()}.webp"
+        compress_qr(path, comp_qr_path)
+        os.remove(path)
+        return comp_qr_path
     except Exception as e:
         raise QRCodeGenerationError(
             f"Could not generate QR code for user {student_id}: {e}"

@@ -4,5 +4,6 @@ __pycache__/
 *.py[cod]
 .env
 *.env
-static/qr_codes/*
+static/*
 !/static/qr_codes/.gitkeep
+!/static/ck_logo.png
