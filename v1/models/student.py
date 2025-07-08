@@ -16,8 +16,10 @@ from v1.utils import verif_str, verif_tel_number
 
 class StudentCreate(BaseModel):
     name: str
+    date_of_birth: str
     tel1: str
     tel2: str
+    email: str
 
     class Config:
         orm_mode = True
@@ -48,8 +50,10 @@ class StudentCreate(BaseModel):
 
 class StudentRead(BaseModel):
     name: str
+    date_of_birth: str
     tel1: str
     tel2: str
+    email: str
 
     class Config:
         orm_mode = True
@@ -58,8 +62,20 @@ class StudentRead(BaseModel):
 class Student(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     name: str = Field(..., nullable=False)
+    date_of_birth: str = Field(..., nullable=False)
     tel1: str = Field(..., max_length=8, nullable=False)
     tel2: str = Field(..., max_length=8, nullable=False)
+    email: Optional[int] = Field(default=None)
+
+    # FK to Image table with cascade on delete/update
+    image: Optional[int] = Field(
+        default=None,
+        sa_column=Column(
+            Integer,
+            ForeignKey("image.id", ondelete="CASCADE", onupdate="CASCADE"),
+            nullable=True,
+        ),
+    )
 
     # FK to QRCode table with cascade on delete/update
     qrcode: Optional[int] = Field(

@@ -47,4 +47,7 @@ async def delete(id: int, session: AsyncSession = Depends(get_session)):
 async def update(
     id: int, new_data: StudentCreate, session: AsyncSession = Depends(get_session)
 ):
+    """
+    Handles the update of a student's information.
+    """
     return await update_user(id, new_data, session)
