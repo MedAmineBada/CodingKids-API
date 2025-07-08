@@ -7,8 +7,6 @@ on startup,includes the versioned API routes."""
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from starlette.requests import Request
-from starlette.responses import JSONResponse
 
 from db.db_initializer import init_db
 from v1 import router
