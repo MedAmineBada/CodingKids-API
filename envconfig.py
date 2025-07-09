@@ -19,6 +19,7 @@ class EnvFile(BaseSettings):
     DB_TABLE_CREATOR_PASSWORD: str
 
     QR_CODE_SAVE_DIR: str
+    STUDENT_IMAGE_SAVE_DIR: str
     CK_LOGO_DIR: str
 
     ENCRYPTION_KEY: str

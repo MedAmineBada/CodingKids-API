@@ -2,9 +2,9 @@
 .idea/
 __pycache__/
 *.py[cod]
-.env
 *.env
-static/*
-!/static/qr_codes/.gitkeep
+static/*/*
+!static/images/.gitkeep
+!static/qr_codes/.gitkeep
 !/static/ck_logo.png
 *.sql

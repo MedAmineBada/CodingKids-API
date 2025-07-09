@@ -3,6 +3,7 @@ Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Mo
 """
 
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi.params import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
@@ -15,16 +16,10 @@ from v1.services.student_service import (
     delete_student,
     update_user,
 )
+from . import image_routes
 
 router = APIRouter(prefix="/students", tags=["Students"])
-
-
-@router.post("/add", tags=["Students"])
-async def add(student: StudentCreate, session: AsyncSession = Depends(get_session)):
-    """
-    Handles the creation of a new student.
-    """
-    return await add_student(student, session)
+router.include_router(image_routes.router)
 
 
 @router.get("/{id}", response_model=StudentRead, tags=["Students"])
@@ -33,6 +28,18 @@ async def get(id: int, session: AsyncSession = Depends(get_session)):
     Handles the retrieval of a student.
     """
     return await get_student(id, session)
+
+
+@router.post("/add", status_code=status.HTTP_200_OK, tags=["Students"])
+async def add(
+    student: StudentCreate,
+    bgtask: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Handles the creation of a new student.
+    """
+    return await add_student(student, session, bgtask)
 
 
 @router.delete("/delete/{id}", status_code=status.HTTP_200_OK, tags=["Students"])
@@ -48,6 +55,6 @@ async def update(
     id: int, new_data: StudentCreate, session: AsyncSession = Depends(get_session)
 ):
     """
-    Handles the updating of a student's data.
+    Handles the update of a student's information.
     """
     return await update_user(id, new_data, session)

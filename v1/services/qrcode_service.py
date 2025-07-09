@@ -8,7 +8,6 @@ import os
 import time
 
 import qrcode
-from PIL import Image
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import SolidFillColorMask
@@ -17,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from envconfig import EnvFile
 from v1.models.qrcode import QRCode
+from v1.utils import compress_img
 
 
 def get_key() -> bytes:
@@ -63,16 +63,6 @@ def decrypt(data: str) -> str:
     return plaintext.decode("utf-8")
 
 
-def compress_qr(src: str, dest: str):
-    with Image.open(src) as img:
-        img.save(
-            dest,
-            format="WEBP",
-            lossless=True,
-            quality=100,
-        )
-
-
 # A custom error for the QRCode Generator
 class QRCodeGenerationError(Exception):
     pass
@@ -114,8 +104,9 @@ def generate_qrcode(data: str, student_id: int) -> str:
         img.save(path)
 
         # Compress the image, return its path and remove the temporary image.
-        comp_qr_path = f"{EnvFile.QR_CODE_SAVE_DIR}/{student_id}-{time.time()}.webp"
-        compress_qr(path, comp_qr_path)
+        comp_qr_path = f"{EnvFile.QR_CODE_SAVE_DIR}/QR{student_id}-{time.time()}.webp"
+        compress_img(path, comp_qr_path)
+
         os.remove(path)
         return comp_qr_path
     except Exception as e:
@@ -133,6 +124,9 @@ class QRCodeNotFoundInDB(Exception):
 
 
 async def delete_qr(id: int, session: AsyncSession):
+    """
+    Handles deletion of a qr code
+    """
     try:
         qrcode = await session.get(QRCode, id)
         if not qrcode:
