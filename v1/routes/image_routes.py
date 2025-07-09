@@ -9,7 +9,6 @@ from fastapi import BackgroundTasks
 from fastapi.params import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
-from watchfiles import awatch
 
 from db.session import get_session
 from v1.services.image_service import (
