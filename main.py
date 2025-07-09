@@ -16,6 +16,7 @@ from v1 import router
 async def lifespan(app: FastAPI):
     """
     Handle the application's lifespan events.
+
     Initializes the database before the application starts accepting requests.
     """
     await init_db()

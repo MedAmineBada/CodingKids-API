@@ -1,5 +1,6 @@
 """
 Environment Variables configuration module,
+
 Defines Environment Variables imported from the .env file.
 """
 
