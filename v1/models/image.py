@@ -1,7 +1,7 @@
 """
-QR Code Table Model
+Student Image Table Model
 
-Defines the `QRCode` table using SQLModel.
+Defines the `Image` table using SQLModel.
 """
 
 from typing import Optional

@@ -1,13 +1,11 @@
 from fastapi import HTTPException, BackgroundTasks
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlmodel import select
 from starlette import status
 from starlette.concurrency import run_in_threadpool
-from starlette.responses import FileResponse
 
 from v1.models.qrcode import QRCode
-from v1.models.student import Student, StudentCreate, StudentRead
+from v1.models.student import Student, StudentCreate
 from v1.services.qrcode_service import (
     generate_qrcode,
     QRCodeGenerationError,
@@ -18,6 +16,10 @@ from v1.services.qrcode_service import (
 
 
 async def background_add_user(student: Student, session: AsyncSession):
+    """
+    This function handles the background tasks for adding students to the database.
+    Helps with response times.
+    """
     session.add(student)
     await session.flush()
 

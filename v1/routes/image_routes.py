@@ -1,22 +1,26 @@
-from http.client import HTTPException
+"""
+Image route definition module.
 
+All routes that are associated with student's images are here.
+"""
+
+from fastapi import APIRouter, UploadFile, File
+from fastapi import BackgroundTasks
 from fastapi.params import Depends
-from sqlalchemy.exc import SQLAlchemyError
-from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
-from fastapi import BackgroundTasks
 
 from db.session import get_session
-from v1.models.image import Image
 from v1.services.image_service import upload_image, get_image
-from fastapi import APIRouter, UploadFile, File
 
 router = APIRouter(tags=["images"])
 
 
 @router.get("/{student_id}/image")
 async def get(student_id: int, session: AsyncSession = Depends(get_session)):
+    """
+    Fetches a student's image by his id
+    """
     return await get_image(student_id, session)
 
 
@@ -27,4 +31,7 @@ async def upload(
     image: UploadFile = File(...),
     session: AsyncSession = Depends(get_session),
 ):
+    """
+    Handles the upload of and image and its association with a student
+    """
     return await upload_image(student_id, image, session, bg_task)

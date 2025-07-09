@@ -4,13 +4,13 @@ Student Table Model
 Defines the `Student` table with core fields and validation logic.
 """
 
+from datetime import date
 from typing import Optional
 
 from fastapi.openapi.models import Contact
 from pydantic import model_validator, BaseModel, EmailStr, field_validator
 from sqlalchemy import ForeignKey, Column, Integer
 from sqlmodel import Field, SQLModel
-from datetime import date
 
 from v1.utils import verif_str, verif_tel_number, verif_birth_date
 
@@ -39,7 +39,7 @@ class StudentCreate(BaseModel):
         """
         Validates that:
         - All required fields (`name`, `tel1`, `tel2`, `birth_date`) are present
-        - `name`, `tel1`,`tel2`, `birth_date each meet their format requirements
+        - `name`, `tel1`,`tel2`, `birth_date` each meet their format requirements
         - `tel1` and `tel2` are not identical
         """
 

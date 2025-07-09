@@ -2,6 +2,7 @@ import io
 import os
 import time
 
+from PIL import Image as PILImage
 from fastapi import UploadFile, HTTPException, BackgroundTasks
 from sqlalchemy import delete
 from sqlalchemy.exc import SQLAlchemyError
@@ -9,7 +10,7 @@ from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 from starlette.responses import FileResponse
-from PIL import Image as PILImage
+
 from envconfig import EnvFile
 from v1.models.image import Image
 from v1.models.student import Student
@@ -18,6 +19,10 @@ from v1.utils import ImageSaveError, compress_img
 
 
 def background_img_save(image, output_path):
+    """
+    A background task that handles image saving and compression.
+    Cuts down immensely on response times.
+    """
     try:
         temp_path = f"{EnvFile.STUDENT_IMAGE_SAVE_DIR}/TEMP-{time.time()}.webp"
         image.save(temp_path, format="WEBP")
@@ -28,6 +33,9 @@ def background_img_save(image, output_path):
 
 
 async def get_image(student: int, session: AsyncSession):
+    """
+    Handles the fetching of a student's image from the database
+    """
     try:
         stmt = select(Image).where(Image.student == student)
         img_query = await session.execute(stmt)
@@ -60,6 +68,10 @@ async def upload_image(
     session: AsyncSession,
     bg_task: BackgroundTasks,
 ):
+    """
+    A function that handles the uploading of a student image and its insertion into the db
+    and association to a student.
+    """
     try:
         path = f"{EnvFile.STUDENT_IMAGE_SAVE_DIR}/AV{student_id}-{time.time()}.webp"
         st = await session.get(Student, student_id)
@@ -75,7 +87,6 @@ async def upload_image(
             if os.path.isfile(url):
                 os.remove(url)
 
-        # await save_image(file, path)
         if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
@@ -117,8 +128,7 @@ async def upload_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error: could not save image.",
         )
-    except Exception as e:
-        print(e)
+    except Exception:
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

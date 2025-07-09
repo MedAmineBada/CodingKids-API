@@ -124,6 +124,9 @@ class QRCodeNotFoundInDB(Exception):
 
 
 async def delete_qr(id: int, session: AsyncSession):
+    """
+    Handles deletion of a qr code
+    """
     try:
         qrcode = await session.get(QRCode, id)
         if not qrcode:

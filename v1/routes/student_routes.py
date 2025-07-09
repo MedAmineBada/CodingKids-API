@@ -3,13 +3,12 @@ Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Mo
 """
 
 from fastapi import APIRouter
+from fastapi import BackgroundTasks
 from fastapi.params import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
-from fastapi import BackgroundTasks
 
 from db.session import get_session
-from . import image_routes
 from v1.models.student import StudentCreate, StudentRead
 from v1.services.student_service import (
     add_student,
@@ -17,6 +16,7 @@ from v1.services.student_service import (
     delete_student,
     update_user,
 )
+from . import image_routes
 
 router = APIRouter(prefix="/students", tags=["Students"])
 router.include_router(image_routes.router)
