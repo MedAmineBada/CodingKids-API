@@ -28,7 +28,7 @@ def background_img_save(image, output_path):
         image.save(temp_path, format="WEBP")
         compress_img(temp_path, output_path)
         os.remove(temp_path)
-    except:
+    except Exception:
         raise ImageSaveError()
 
 
@@ -46,6 +46,7 @@ async def get_image(student: int, session: AsyncSession):
             media_type="image/webp",
             path=img.url,
         )
+
     except StudentNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
@@ -127,6 +128,129 @@ async def upload_image(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error: could not save image.",
+        )
+    except Exception:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong",
+        )
+
+
+class ImageReplaceError(Exception):
+    pass
+
+
+async def replace_image(
+    student_id: int,
+    bg_task: BackgroundTasks,
+    file: UploadFile,
+    session: AsyncSession,
+):
+    """
+    Replaces a student's image.
+    If the student doesn't have an image, a new one i added.
+    """
+    try:
+        student = await session.get(Student, student_id)
+
+        if not student:
+            raise StudentNotFound()
+
+        stmt = select(Image).where(Image.student == student_id)
+        old_img_query = await session.execute(stmt)
+        old_img: Image = old_img_query.scalar()
+
+        new_path = f"{EnvFile.STUDENT_IMAGE_SAVE_DIR}/AV{student_id}-{time.time()}.webp"
+
+        try:
+            image_bytes = await file.read()
+            image = PILImage.open(io.BytesIO(image_bytes))
+        except:
+            raise ImageReplaceError()
+
+        bg_task.add_task(background_img_save, image, new_path)
+        if old_img:
+            os.remove(old_img.url)
+            old_img.url = new_path
+            session.add(old_img)
+        else:
+            new_img = Image(url=new_path, student=student_id)
+            session.add(new_img)
+            await session.flush()
+            await session.refresh(new_img)
+
+            student.image = new_img.id
+            session.add(student)
+        await session.commit()
+        return {"success": "image replaced"}
+
+    except ImageReplaceError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Image not replaced",
+        )
+    except ImageSaveError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Image not saved",
+        )
+    except StudentNotFound:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
+        )
+    except SQLAlchemyError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error: could not replace image.",
+        )
+    except Exception:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Something went wrong",
+        )
+
+
+async def delete_image(
+    student_id: int,
+    session: AsyncSession,
+):
+    try:
+        student = await session.get(Student, student_id)
+        if not student:
+            raise StudentNotFound()
+
+        if student.image:
+            img_id = student.image
+            img = await session.get(Image, img_id)
+
+            if img:
+                # Remove DB link and image record
+                student.image = None
+                await session.delete(img)
+                session.add(student)
+
+                # Try to delete the image file (if it exists)
+                if os.path.exists(img.url):
+                    os.remove(img.url)
+
+            await session.commit()
+
+        return {"success": "Image deleted"}
+    except StudentNotFound:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
+        )
+    except SQLAlchemyError:
+        await session.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error: could not delete image.",
         )
     except Exception:
         await session.rollback()
