@@ -2,9 +2,18 @@
 Module for common helper functions used across the application.
 """
 
+import io
+import os
+import time
 from datetime import date
 
 from PIL import Image
+from fastapi import HTTPException, UploadFile
+from starlette import status
+from PIL import Image as PILImage
+from starlette.concurrency import run_in_threadpool
+
+from envconfig import EnvFile
 
 
 def verif_str(input_str: str) -> bool:
@@ -49,28 +58,35 @@ def verif_birth_date(dob: date) -> bool:
     return True
 
 
-def save_image(image_file, output_path):
-    """
-    Save an uploaded image to the static directory in WebP format.
+class ImageSaveError(Exception):
+    pass
 
-    Args:
-        image_file: UploadFile-like object, any supported format.
-        output_dir: Path to the directory where images are saved.
 
-    Returns:
-        The relative path (filename) of the saved WebP image.
-    """
+async def save_image(file: UploadFile, output_path: str):
+    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Unsupported file type.",
+        )
     try:
-        # Generate a unique filename
-        file_id = "Test"
-        output_filename = f"{file_id}.webp"
-        output_path = "static/images/" + output_filename
+        image_bytes = await file.read()
+        image = PILImage.open(io.BytesIO(image_bytes))
 
-        # Open image and convert to RGBA for compatibility
-        image = Image.open(image_file.file)
-        image = image.convert("RGBA")
+        temp_path = f"{EnvFile.STUDENT_IMAGE_SAVE_DIR}/TEMP-{time.time()}.webp"
 
-        # Save as WebP
-        image.save(output_path, format="WEBP")
-    except Exception as e:
-        print(e)
+        image.save(temp_path, format="WEBP")
+        compress_img(temp_path, output_path)
+        os.remove(temp_path)
+
+    except:
+        raise ImageSaveError()
+
+
+def compress_img(src: str, dest: str):
+    with Image.open(src) as img:
+        img.save(
+            dest,
+            format="WEBP",
+            lossless=True,
+            quality=100,
+        )

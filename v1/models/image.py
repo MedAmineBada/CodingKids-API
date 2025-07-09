@@ -23,7 +23,7 @@ class Image(SQLModel, table=True):
         default=None,
         sa_column=Column(
             Integer,
-            ForeignKey("student.id", ondelete="CASCADE", onupdate="CASCADE"),
+            ForeignKey("student.id"),
             nullable=True,
         ),
     )

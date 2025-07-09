@@ -6,8 +6,10 @@ from fastapi import APIRouter
 from fastapi.params import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
+from fastapi import BackgroundTasks
 
 from db.session import get_session
+from . import image_routes
 from v1.models.student import StudentCreate, StudentRead
 from v1.services.student_service import (
     add_student,
@@ -17,14 +19,7 @@ from v1.services.student_service import (
 )
 
 router = APIRouter(prefix="/students", tags=["Students"])
-
-
-@router.post("/add", tags=["Students"])
-async def add(student: StudentCreate, session: AsyncSession = Depends(get_session)):
-    """
-    Handles the creation of a new student.
-    """
-    return await add_student(student, session)
+router.include_router(image_routes.router)
 
 
 @router.get("/{id}", response_model=StudentRead, tags=["Students"])
@@ -33,6 +28,18 @@ async def get(id: int, session: AsyncSession = Depends(get_session)):
     Handles the retrieval of a student.
     """
     return await get_student(id, session)
+
+
+@router.post("/add", status_code=status.HTTP_200_OK, tags=["Students"])
+async def add(
+    student: StudentCreate,
+    bgtask: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+):
+    """
+    Handles the creation of a new student.
+    """
+    return await add_student(student, session, bgtask)
 
 
 @router.delete("/delete/{id}", status_code=status.HTTP_200_OK, tags=["Students"])
