@@ -10,6 +10,8 @@ from fastapi import FastAPI
 
 from db.db_initializer import init_db
 from v1 import router
+from v1.exception_handler import custom_app_exception_handler
+from v1.exceptions import AppException
 
 
 @asynccontextmanager
@@ -24,4 +26,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan, docs_url=None, redoc_url=None, openapi_url=None)
+
+
+app.add_exception_handler(AppException, custom_app_exception_handler)
+
 app.include_router(router.router)

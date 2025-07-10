@@ -13,7 +13,7 @@ from fastapi import HTTPException, UploadFile
 from starlette import status
 
 from envconfig import EnvFile
-from v1.exceptions import ImageSaveError
+from v1.exceptions import StudentImageSaveError
 
 
 def verif_str(input_str: str) -> bool:
@@ -75,7 +75,7 @@ async def save_image(file: UploadFile, output_path: str):
         os.remove(temp_path)
 
     except:
-        raise ImageSaveError()
+        raise StudentImageSaveError()
 
 
 def compress_img(src: str, dest: str):
