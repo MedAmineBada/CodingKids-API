@@ -36,6 +36,11 @@ class QRCodeNotFoundInDBError(AppException):
         super().__init__(message, status.HTTP_404_NOT_FOUND)
 
 
+class QRCodeNotFoundError(AppException):
+    def __init__(self, message="QR Code image was not found."):
+        super().__init__(message, status.HTTP_404_NOT_FOUND)
+
+
 class StudentImageReplaceError(AppException):
     def __init__(self, message="Failed to replace the student's image."):
         super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)

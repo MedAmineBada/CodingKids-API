@@ -1,19 +1,26 @@
 import os.path
+from typing import Optional
 
 from fastapi import BackgroundTasks
-from sqlalchemy import delete
+from sqlalchemy import delete, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
+from starlette import status
 from starlette.concurrency import run_in_threadpool
+from starlette.responses import FileResponse
 
-from v1.exceptions import StudentNotFoundError, StudentImageDeleteError
+from v1.exceptions import (
+    StudentNotFoundError,
+    StudentImageDeleteError,
+    QRCodeNotFoundError,
+    QRCodeDeletionError,
+)
 from v1.models.image import Image
 from v1.models.qrcode import QRCode
 from v1.models.student import Student, StudentCreate
 from v1.services.qrcode_service import (
     generate_qrcode,
     QRCodeNotFoundInDBError,
-    QRCodeDeletionError,
 )
 
 
@@ -49,8 +56,24 @@ async def add_student(
     return {"Success": "Student created"}
 
 
-async def get_all_students(session: AsyncSession):
+async def get_all_students(
+    session: AsyncSession,
+    order_by: Optional[str] = "name",
+    name_search: Optional[str] = None,
+):
+    order_columns = {
+        "name": Student.name,
+        "birth_date": Student.birth_date,
+    }
+    order_column = order_columns.get(order_by, Student.name)
+
     stmt = select(Student)
+
+    if name_search:
+        stmt = stmt.where(func.lower(Student.name).like(f"%{name_search.lower()}%"))
+
+    stmt = stmt.order_by(order_column)
+
     query = await session.execute(stmt)
     results = query.scalars().all()
     return results
@@ -126,3 +149,25 @@ async def update_student(student_id: int, data: StudentCreate, session: AsyncSes
     await session.commit()
 
     return {"Success": "Student updated."}
+
+
+async def get_qr_code(student_id: int, session: AsyncSession):
+    """
+    Retrieves the QR Code of a student and returns it.
+    """
+    student = await session.get(Student, student_id)
+    if not student:
+        raise StudentNotFoundError()
+
+    qrcode = await session.get(QRCode, student.qrcode)
+    if not qrcode:
+        raise QRCodeNotFoundInDBError()
+
+    if not os.path.exists(qrcode.url):
+        raise QRCodeNotFoundError()
+
+    return FileResponse(
+        status_code=status.HTTP_200_OK,
+        media_type="image/webp",
+        path=qrcode.url,
+    )

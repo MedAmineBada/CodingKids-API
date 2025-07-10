@@ -2,9 +2,9 @@
 Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Modification.
 """
 
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi import BackgroundTasks
 from fastapi.params import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -18,6 +18,7 @@ from v1.services.student_service import (
     delete_student,
     update_student,
     get_all_students,
+    get_qr_code,
 )
 from . import image_routes
 
@@ -31,11 +32,15 @@ router.include_router(image_routes.router)
     status_code=status.HTTP_200_OK,
     tags=["Students"],
 )
-async def get_all(session: AsyncSession = Depends(get_session)):
+async def get_all(
+    order_by: Optional[str] = Query("name"),
+    name_search: Optional[str] = Query(None),
+    session: AsyncSession = Depends(get_session),
+):
     """
     Returns all students in the database.
     """
-    return await get_all_students(session)
+    return await get_all_students(session, order_by, name_search)
 
 
 @router.get("/{id}", response_model=StudentRead, tags=["Students"])
@@ -74,3 +79,11 @@ async def update(
     Handles the update of a student's information.
     """
     return await update_student(id, new_data, session)
+
+
+@router.get("/{id}/code", status_code=status.HTTP_200_OK, tags=["Students"])
+async def get_code(id: int, session: AsyncSession = Depends(get_session)):
+    """
+    Handles the retrieval of a student's QR Code.
+    """
+    return await get_qr_code(id, session)
