@@ -16,9 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from envconfig import EnvFile
 from v1.exceptions import (
-    QRCodeGenerationError,
     QRCodeNotFoundInDBError,
-    QRCodeDeletionError,
 )
 from v1.models.qrcode import QRCode
 from v1.utils import compress_img
@@ -74,62 +72,50 @@ def generate_qrcode(data: str, student_id: int) -> str:
 
     Returns the QR Code's path.
     """
-    try:
-        # Create a QR code instance.
-        qr = qrcode.QRCode(
-            version=None,  # Auto-adjust size
-            error_correction=qrcode.ERROR_CORRECT_H,  # High error correction
-            box_size=10,
-            border=1,
-            image_factory=StyledPilImage,
-            mask_pattern=None,
-        )
 
-        # Encrypt the data and add it to the QR code
-        qr.add_data(encrypt(data))
-        qr.make(fit=True)
+    # Create a QR code instance.
+    qr = qrcode.QRCode(
+        version=None,  # Auto-adjust size
+        error_correction=qrcode.ERROR_CORRECT_H,  # High error correction
+        box_size=10,
+        border=1,
+        image_factory=StyledPilImage,
+        mask_pattern=None,
+    )
 
-        # Generate the image with style and embedded logo
-        img = qr.make_image(
-            color_mask=SolidFillColorMask(
-                front_color=(0, 0, 0),
-                back_color=(255, 255, 255),
-            ),
-            module_drawer=RoundedModuleDrawer(),
-            embeded_image_path=EnvFile.CK_LOGO_DIR,
-        )
+    # Encrypt the data and add it to the QR code
+    qr.add_data(encrypt(data))
+    qr.make(fit=True)
 
-        # Create a file path for temporary image and save it
-        path = f"{EnvFile.QR_CODE_SAVE_DIR}/TEMP-{student_id}-{time.time()}.webp"
-        img.save(path)
+    # Generate the image with style and embedded logo
+    img = qr.make_image(
+        color_mask=SolidFillColorMask(
+            front_color=(0, 0, 0),
+            back_color=(255, 255, 255),
+        ),
+        module_drawer=RoundedModuleDrawer(),
+        embeded_image_path=EnvFile.CK_LOGO_DIR,
+    )
 
-        # Compress the image, return its path and remove the temporary image.
-        comp_qr_path = f"{EnvFile.QR_CODE_SAVE_DIR}/QR{student_id}-{time.time()}.webp"
-        compress_img(path, comp_qr_path)
+    # Create a file path for temporary image and save it
+    path = f"{EnvFile.QR_CODE_SAVE_DIR}/TEMP-{student_id}-{time.time()}.webp"
+    img.save(path)
 
-        os.remove(path)
-        return comp_qr_path
-    except Exception as e:
-        raise QRCodeGenerationError(
-            f"Could not generate QR code for user {student_id}: {e}"
-        )
+    # Compress the image, return its path and remove the temporary image.
+    comp_qr_path = f"{EnvFile.QR_CODE_SAVE_DIR}/QR{student_id}-{time.time()}.webp"
+    compress_img(path, comp_qr_path)
+
+    os.remove(path)
+    return comp_qr_path
 
 
 async def delete_qr(id: int, session: AsyncSession):
     """
     Handles deletion of a qr code
     """
-    try:
-        qrcode = await session.get(QRCode, id)
-        if not qrcode:
-            raise QRCodeNotFoundInDBError()
-
-        path = qrcode.url
-        os.remove(path)
-
-    except FileNotFoundError:
-        raise FileNotFoundError()
-    except QRCodeNotFoundInDBError:
+    qrcode = await session.get(QRCode, id)
+    if not qrcode:
         raise QRCodeNotFoundInDBError()
-    except:
-        raise QRCodeDeletionError()
+
+    path = qrcode.url
+    os.remove(path)
