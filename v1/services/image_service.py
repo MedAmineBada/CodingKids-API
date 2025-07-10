@@ -1,7 +1,6 @@
 import io
 import os
 import time
-from pprint import pprint
 
 from PIL import Image as PILImage
 from fastapi import UploadFile, HTTPException, BackgroundTasks

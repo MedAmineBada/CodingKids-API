@@ -8,10 +8,9 @@ import time
 from datetime import date
 
 from PIL import Image
+from PIL import Image as PILImage
 from fastapi import HTTPException, UploadFile
 from starlette import status
-from PIL import Image as PILImage
-from starlette.concurrency import run_in_threadpool
 
 from envconfig import EnvFile
 from v1.exceptions import ImageSaveError

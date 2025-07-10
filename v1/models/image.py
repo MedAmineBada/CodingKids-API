@@ -6,7 +6,6 @@ Defines the `Image` table using SQLModel.
 
 from typing import Optional
 
-from sqlalchemy import Column, Integer, ForeignKey
 from sqlmodel import Field, SQLModel
 
 
