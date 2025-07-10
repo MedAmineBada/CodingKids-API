@@ -15,7 +15,11 @@ from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from envconfig import EnvFile
-from v1.exceptions import QRCodeGenerationError, QRCodeNotFoundInDB, QRCodeDeletionError
+from v1.exceptions import (
+    QRCodeGenerationError,
+    QRCodeNotFoundInDBError,
+    QRCodeDeletionError,
+)
 from v1.models.qrcode import QRCode
 from v1.utils import compress_img
 
@@ -118,14 +122,14 @@ async def delete_qr(id: int, session: AsyncSession):
     try:
         qrcode = await session.get(QRCode, id)
         if not qrcode:
-            raise QRCodeNotFoundInDB()
+            raise QRCodeNotFoundInDBError()
 
         path = qrcode.url
         os.remove(path)
 
     except FileNotFoundError:
         raise FileNotFoundError()
-    except QRCodeNotFoundInDB:
-        raise QRCodeNotFoundInDB()
+    except QRCodeNotFoundInDBError:
+        raise QRCodeNotFoundInDBError()
     except:
         raise QRCodeDeletionError()

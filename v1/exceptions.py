@@ -1,30 +1,56 @@
-class StudentNotFound(Exception):
-    pass
+"""
+Exceptions Module.
+
+Defines custom exceptions.
+"""
+
+from fastapi import status
 
 
-class QRCodeGenerationError(Exception):
-    pass
+class AppException(Exception):
+    """Base class for custom exceptions with message and HTTP status code."""
+
+    def __init__(self, message: str, status_code: int = status.HTTP_400_BAD_REQUEST):
+        self.message = message
+        self.status_code = status_code
+        super().__init__(self.message)
 
 
-class QRCodeDeletionError(Exception):
-    pass
+class StudentNotFoundError(AppException):
+    def __init__(self, message="Student was not found in DB."):
+        super().__init__(message, status.HTTP_404_NOT_FOUND)
 
 
-class QRCodeNotFoundInDB(Exception):
-    pass
+class QRCodeGenerationError(AppException):
+    def __init__(self, message="Failed to generate the QR Code."):
+        super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ImageReplaceError(Exception):
-    pass
+class QRCodeDeletionError(AppException):
+    def __init__(self, message="Failed to delete the QR Code."):
+        super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ImageSaveError(Exception):
-    pass
+class QRCodeNotFoundInDBError(AppException):
+    def __init__(self, message="QR Code was not found in DB."):
+        super().__init__(message, status.HTTP_404_NOT_FOUND)
 
 
-class ImageDeleteError(Exception):
-    pass
+class StudentImageReplaceError(AppException):
+    def __init__(self, message="Failed to replace the student's image."):
+        super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class ImageNotFoundError(Exception):
-    pass
+class StudentImageSaveError(AppException):
+    def __init__(self, message="Failed to save the student's image."):
+        super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StudentImageDeleteError(AppException):
+    def __init__(self, message="Failed to delete the student's image."):
+        super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StudentImageNotFoundError(AppException):
+    def __init__(self, message="Student's Image was not found in DB."):
+        super().__init__(message, status.HTTP_404_NOT_FOUND)

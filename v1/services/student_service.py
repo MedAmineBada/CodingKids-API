@@ -8,14 +8,14 @@ from sqlmodel import select
 from starlette import status
 from starlette.concurrency import run_in_threadpool
 
-from v1.exceptions import StudentNotFound, ImageDeleteError
+from v1.exceptions import StudentNotFoundError, StudentImageDeleteError
 from v1.models.image import Image
 from v1.models.qrcode import QRCode
 from v1.models.student import Student, StudentCreate
 from v1.services.qrcode_service import (
     generate_qrcode,
     QRCodeGenerationError,
-    QRCodeNotFoundInDB,
+    QRCodeNotFoundInDBError,
     QRCodeDeletionError,
 )
 
@@ -96,10 +96,10 @@ async def get_student(student_id: int, session: AsyncSession):
     try:
         student = await session.get(Student, student_id)
         if not student:
-            raise StudentNotFound()
+            raise StudentNotFoundError()
 
         return student
-    except StudentNotFound:
+    except StudentNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
         )
@@ -119,7 +119,7 @@ async def delete_student(student_id: int, session: AsyncSession):
     try:
         student = await session.get(Student, student_id)
         if not student:
-            raise StudentNotFound()
+            raise StudentNotFoundError()
 
         img_id = student.image
         qr_id = student.qrcode
@@ -127,7 +127,7 @@ async def delete_student(student_id: int, session: AsyncSession):
         await session.delete(student)
 
         if not qr_id:
-            raise QRCodeNotFoundInDB()
+            raise QRCodeNotFoundInDBError()
 
         qr = await session.get(QRCode, qr_id)
         try:
@@ -147,9 +147,9 @@ async def delete_student(student_id: int, session: AsyncSession):
                 if os.path.exists(img.url):
                     os.remove(img.url)
                 else:
-                    raise ImageDeleteError()
+                    raise StudentImageDeleteError()
             except:
-                raise ImageDeleteError()
+                raise StudentImageDeleteError()
 
             stmt_del_img = delete(Image).where(Image.id == img_id)
             await session.execute(stmt_del_img)
@@ -157,12 +157,12 @@ async def delete_student(student_id: int, session: AsyncSession):
         await session.commit()
         return {"Success": "Student deleted"}
 
-    except ImageDeleteError:
+    except StudentImageDeleteError:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Local image was not deleted",
         )
-    except StudentNotFound:
+    except StudentNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
         )
@@ -171,7 +171,7 @@ async def delete_student(student_id: int, session: AsyncSession):
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Local QR Code image was not found",
         )
-    except QRCodeNotFoundInDB:
+    except QRCodeNotFoundInDBError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="QR Code was not found in database",
@@ -197,7 +197,7 @@ async def update_student(student_id: int, data: StudentCreate, session: AsyncSes
     try:
         student = await session.get(Student, student_id)
         if not student:
-            raise StudentNotFound()
+            raise StudentNotFoundError()
 
         student_data = data.model_dump(exclude_unset=True)
 
@@ -209,7 +209,7 @@ async def update_student(student_id: int, data: StudentCreate, session: AsyncSes
 
         return {"Success": "Student updated."}
 
-    except StudentNotFound:
+    except StudentNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
         )
