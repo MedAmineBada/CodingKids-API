@@ -12,8 +12,8 @@ from PIL import Image as PILImage
 from fastapi import HTTPException, UploadFile
 from starlette import status
 
+from api.v1.exceptions import StudentImageSaveError
 from envconfig import EnvFile
-from v1.exceptions import StudentImageSaveError
 
 
 def verif_str(input_str: str) -> bool:

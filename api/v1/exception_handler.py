@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.exc import SQLAlchemyError
 from starlette import status
 
-from v1.exceptions import AppException
+from api.v1.exceptions import AppException
 
 
 async def custom_app_exception_handler(request: Request, exc: AppException):

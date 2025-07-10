@@ -8,10 +8,10 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from api.v1 import router
+from api.v1.exception_handler import custom_app_exception_handler
+from api.v1.exceptions import AppException
 from db.db_initializer import init_db
-from v1 import router
-from v1.exception_handler import custom_app_exception_handler
-from v1.exceptions import AppException
 
 
 @asynccontextmanager

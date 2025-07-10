@@ -9,16 +9,16 @@ from starlette import status
 from starlette.concurrency import run_in_threadpool
 from starlette.responses import FileResponse
 
-from v1.exceptions import (
+from api.v1.exceptions import (
     StudentNotFoundError,
     StudentImageDeleteError,
     QRCodeNotFoundError,
     QRCodeDeletionError,
 )
-from v1.models.image import Image
-from v1.models.qrcode import QRCode
-from v1.models.student import Student, StudentCreate
-from v1.services.qrcode_service import (
+from api.v1.models.image import Image
+from api.v1.models.qrcode import QRCode
+from api.v1.models.student import Student, StudentCreate
+from api.v1.services.qrcode_service import (
     generate_qrcode,
     QRCodeNotFoundInDBError,
 )

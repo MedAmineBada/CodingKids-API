@@ -10,13 +10,13 @@ from fastapi.params import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 
-from db.session import get_session
-from v1.services.image_service import (
+from api.v1.services.image_service import (
     upload_image,
     get_image,
     replace_image,
     delete_image,
 )
+from db.session import get_session
 
 router = APIRouter(tags=["images"])
 

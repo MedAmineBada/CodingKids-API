@@ -10,9 +10,8 @@ from fastapi.params import Depends
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 
-from db.session import get_session
-from v1.models.student import StudentCreate, StudentRead
-from v1.services.student_service import (
+from api.v1.models.student import StudentCreate, StudentRead
+from api.v1.services.student_service import (
     add_student,
     get_student,
     delete_student,
@@ -20,6 +19,7 @@ from v1.services.student_service import (
     get_all_students,
     get_qr_code,
 )
+from db.session import get_session
 from . import image_routes
 
 router = APIRouter(prefix="/students", tags=["Students"])
@@ -51,7 +51,7 @@ async def get(id: int, session: AsyncSession = Depends(get_session)):
     return await get_student(id, session)
 
 
-@router.post("/add", status_code=status.HTTP_200_OK, tags=["Students"])
+@router.post("/add", status_code=status.HTTP_201_CREATED, tags=["Students"])
 async def add(
     student: StudentCreate,
     bgtask: BackgroundTasks,

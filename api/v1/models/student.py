@@ -12,7 +12,7 @@ from pydantic import model_validator, BaseModel, EmailStr, field_validator
 from sqlalchemy import ForeignKey, Column, Integer
 from sqlmodel import Field, SQLModel
 
-from v1.utils import verif_str, verif_tel_number, verif_birth_date
+from api.v1.utils import verif_str, verif_tel_number, verif_birth_date
 
 
 class StudentCreate(BaseModel):

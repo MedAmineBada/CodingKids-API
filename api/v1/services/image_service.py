@@ -10,15 +10,15 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 from starlette.responses import FileResponse
 
-from envconfig import EnvFile
-from v1.exceptions import (
+from api.v1.exceptions import (
     StudentImageReplaceError,
     StudentImageNotFoundError,
 )
-from v1.models.image import Image
-from v1.models.student import Student
-from v1.services.student_service import StudentNotFoundError
-from v1.utils import StudentImageSaveError, compress_img
+from api.v1.models.image import Image
+from api.v1.models.student import Student
+from api.v1.services.student_service import StudentNotFoundError
+from api.v1.utils import StudentImageSaveError, compress_img
+from envconfig import EnvFile
 
 
 def background_img_save(image, output_path):

@@ -12,6 +12,7 @@ Configuration is loaded via `EnvFile`.
 """
 
 from sqlalchemy.ext.asyncio import create_async_engine
+
 from envconfig import EnvFile
 
 # Database URLs
@@ -25,5 +26,5 @@ DB_URL_CREATOR = (
 )
 
 # Engine Creation
-creator_engine = create_async_engine(DB_URL_CREATOR, echo=True)
-user_engine = create_async_engine(DB_URL_USER, echo=True)
+creator_engine = create_async_engine(DB_URL_CREATOR, echo=False)
+user_engine = create_async_engine(DB_URL_USER, echo=False)
