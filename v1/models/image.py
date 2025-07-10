@@ -17,13 +17,3 @@ class Image(SQLModel, table=True):
         index=True,
     )
     url: str = Field(default=None, nullable=False)
-
-    # FK to Student table with cascade on delete/update
-    student: Optional[int] = Field(
-        default=None,
-        sa_column=Column(
-            Integer,
-            ForeignKey("student.id"),
-            nullable=True,
-        ),
-    )

@@ -1,6 +1,7 @@
 import io
 import os
 import time
+from pprint import pprint
 
 from PIL import Image as PILImage
 from fastapi import UploadFile, HTTPException, BackgroundTasks
@@ -12,6 +13,7 @@ from starlette import status
 from starlette.responses import FileResponse
 
 from envconfig import EnvFile
+from v1.exceptions import ImageReplaceError, ImageNotFoundError
 from v1.models.image import Image
 from v1.models.student import Student
 from v1.services.student_service import StudentNotFound
@@ -37,16 +39,26 @@ async def get_image(student: int, session: AsyncSession):
     Handles the fetching of a student's image from the database
     """
     try:
-        stmt = select(Image).where(Image.student == student)
-        img_query = await session.execute(stmt)
-        img: Image = img_query.scalar()
+        student = await session.get(Student, student)
+
+        if not student:
+            raise StudentNotFound()
+
+        img: Image = await session.get(Image, student.image)
+
+        if not img:
+            raise ImageNotFoundError()
 
         return FileResponse(
             status_code=status.HTTP_200_OK,
             media_type="image/webp",
             path=img.url,
         )
-
+    except ImageNotFoundError:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student has no image",
+        )
     except StudentNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
@@ -78,21 +90,22 @@ async def upload_image(
         st = await session.get(Student, student_id)
         if not st:
             raise StudentNotFound()
-        img = Image(url=path, student=student_id)
 
-        getold = select(Image.url).where(Image.student == student_id)
-        oldimgs = await session.execute(getold)
-        urls = oldimgs.scalars().all()
+        if st.image:
+            old = await session.get(Image, st.image)
+            if os.path.isfile(old.url):
+                os.remove(old.url)
 
-        for url in urls:
-            if os.path.isfile(url):
-                os.remove(url)
+            stmt = delete(Image).where(Image.id == old.id)
+            await session.execute(stmt)
 
         if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
             raise HTTPException(
                 status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
                 detail="Unsupported file type.",
             )
+        img = Image(url=path)
+
         try:
             image_bytes = await file.read()
             image = PILImage.open(io.BytesIO(image_bytes))
@@ -102,9 +115,7 @@ async def upload_image(
         bg_task.add_task(background_img_save, image, path)
 
         st.image = None
-
-        stmt = delete(Image).where(Image.student == student_id)
-        await session.execute(stmt)
+        await session.flush()
 
         session.add(img)
         await session.flush()
@@ -129,16 +140,13 @@ async def upload_image(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Database error: could not save image.",
         )
-    except Exception:
+    except Exception as e:
+        print(e)
         await session.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Something went wrong",
         )
-
-
-class ImageReplaceError(Exception):
-    pass
 
 
 async def replace_image(
@@ -157,7 +165,7 @@ async def replace_image(
         if not student:
             raise StudentNotFound()
 
-        stmt = select(Image).where(Image.student == student_id)
+        stmt = select(Image).where(Image.id == student.image)
         old_img_query = await session.execute(stmt)
         old_img: Image = old_img_query.scalar()
 
@@ -175,7 +183,7 @@ async def replace_image(
             old_img.url = new_path
             session.add(old_img)
         else:
-            new_img = Image(url=new_path, student=student_id)
+            new_img = Image(url=new_path)
             session.add(new_img)
             await session.flush()
             await session.refresh(new_img)

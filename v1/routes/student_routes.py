@@ -2,6 +2,8 @@
 Module for defining the `/users/` endpoints: Creation, Fetching, Deletion and Modification.
 """
 
+from typing import List
+
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi.params import Depends
@@ -14,12 +16,26 @@ from v1.services.student_service import (
     add_student,
     get_student,
     delete_student,
-    update_user,
+    update_student,
+    get_all_students,
 )
 from . import image_routes
 
 router = APIRouter(prefix="/students", tags=["Students"])
 router.include_router(image_routes.router)
+
+
+@router.get(
+    "/",
+    response_model=List[StudentRead],
+    status_code=status.HTTP_200_OK,
+    tags=["Students"],
+)
+async def get_all(session: AsyncSession = Depends(get_session)):
+    """
+    Returns all students in the database.
+    """
+    return await get_all_students(session)
 
 
 @router.get("/{id}", response_model=StudentRead, tags=["Students"])
@@ -42,7 +58,7 @@ async def add(
     return await add_student(student, session, bgtask)
 
 
-@router.delete("/delete/{id}", status_code=status.HTTP_200_OK, tags=["Students"])
+@router.delete("/{id}/delete", status_code=status.HTTP_200_OK, tags=["Students"])
 async def delete(id: int, session: AsyncSession = Depends(get_session)):
     """
     Handles the deletion of a student.
@@ -50,11 +66,11 @@ async def delete(id: int, session: AsyncSession = Depends(get_session)):
     return await delete_student(id, session)
 
 
-@router.patch("/update/{id}", status_code=status.HTTP_200_OK, tags=["Students"])
+@router.patch("/{id}/update", status_code=status.HTTP_200_OK, tags=["Students"])
 async def update(
     id: int, new_data: StudentCreate, session: AsyncSession = Depends(get_session)
 ):
     """
     Handles the update of a student's information.
     """
-    return await update_user(id, new_data, session)
+    return await update_student(id, new_data, session)

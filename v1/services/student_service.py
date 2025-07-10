@@ -1,9 +1,15 @@
+import os.path
+
 from fastapi import HTTPException, BackgroundTasks
+from sqlalchemy import delete
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 from starlette import status
 from starlette.concurrency import run_in_threadpool
 
+from v1.exceptions import StudentNotFound, ImageDeleteError
+from v1.models.image import Image
 from v1.models.qrcode import QRCode
 from v1.models.student import Student, StudentCreate
 from v1.services.qrcode_service import (
@@ -11,7 +17,6 @@ from v1.services.qrcode_service import (
     QRCodeGenerationError,
     QRCodeNotFoundInDB,
     QRCodeDeletionError,
-    delete_qr,
 )
 
 
@@ -27,7 +32,6 @@ async def background_add_user(student: Student, session: AsyncSession):
 
     qr_code = QRCode()
     qr_code.url = qr_img_path
-    qr_code.student = student.id
 
     session.add(qr_code)
     await session.flush()
@@ -65,8 +69,24 @@ async def add_student(
         )
 
 
-class StudentNotFound(Exception):
-    pass
+async def get_all_students(session: AsyncSession):
+    try:
+        stmt = select(Student)
+        query = await session.execute(stmt)
+        results = query.scalars().all()
+        return results
+
+    except SQLAlchemyError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Database error: Couldn't fetch students.",
+        )
+    except Exception as e:
+        print(e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred.",
+        )
 
 
 async def get_student(student_id: int, session: AsyncSession):
@@ -101,22 +121,55 @@ async def delete_student(student_id: int, session: AsyncSession):
         if not student:
             raise StudentNotFound()
 
+        img_id = student.image
         qr_id = student.qrcode
 
         await session.delete(student)
-        await delete_qr(qr_id, session)
+
+        if not qr_id:
+            raise QRCodeNotFoundInDB()
+
+        qr = await session.get(QRCode, qr_id)
+        try:
+            if os.path.exists(qr.url):
+                os.remove(qr.url)
+            else:
+                raise QRCodeDeletionError()
+        except:
+            raise QRCodeDeletionError()
+
+        stmt_del_qr = delete(QRCode).where(QRCode.id == qr_id)
+        await session.execute(stmt_del_qr)
+
+        if img_id:
+            img = await session.get(Image, img_id)
+            try:
+                if os.path.exists(img.url):
+                    os.remove(img.url)
+                else:
+                    raise ImageDeleteError()
+            except:
+                raise ImageDeleteError()
+
+            stmt_del_img = delete(Image).where(Image.id == img_id)
+            await session.execute(stmt_del_img)
 
         await session.commit()
+        return {"Success": "Student deleted"}
 
-        return {"Success": "User deleted."}
-
+    except ImageDeleteError:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Local image was not deleted",
+        )
     except StudentNotFound:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Student was not found"
         )
     except FileNotFoundError:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="QR Code image was not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Local QR Code image was not found",
         )
     except QRCodeNotFoundInDB:
         raise HTTPException(
@@ -140,7 +193,7 @@ async def delete_student(student_id: int, session: AsyncSession):
         )
 
 
-async def update_user(student_id: int, data: StudentCreate, session: AsyncSession):
+async def update_student(student_id: int, data: StudentCreate, session: AsyncSession):
     try:
         student = await session.get(Student, student_id)
         if not student:
@@ -154,7 +207,7 @@ async def update_user(student_id: int, data: StudentCreate, session: AsyncSessio
         session.add(student)
         await session.commit()
 
-        return {"Success": "User updated."}
+        return {"Success": "Student updated."}
 
     except StudentNotFound:
         raise HTTPException(

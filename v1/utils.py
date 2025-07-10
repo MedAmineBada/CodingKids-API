@@ -14,6 +14,7 @@ from PIL import Image as PILImage
 from starlette.concurrency import run_in_threadpool
 
 from envconfig import EnvFile
+from v1.exceptions import ImageSaveError
 
 
 def verif_str(input_str: str) -> bool:
@@ -56,10 +57,6 @@ def verif_birth_date(dob: date) -> bool:
     if age < 0:
         return False
     return True
-
-
-class ImageSaveError(Exception):
-    pass
 
 
 async def save_image(file: UploadFile, output_path: str):

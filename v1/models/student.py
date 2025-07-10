@@ -85,7 +85,7 @@ class Student(SQLModel, table=True):
         default=None,
         sa_column=Column(
             Integer,
-            ForeignKey("image.id", ondelete="CASCADE", onupdate="CASCADE"),
+            ForeignKey("image.id", ondelete="CASCADE"),
             nullable=True,
         ),
     )
@@ -95,7 +95,7 @@ class Student(SQLModel, table=True):
         default=None,
         sa_column=Column(
             Integer,
-            ForeignKey("qrcode.id", ondelete="CASCADE", onupdate="CASCADE"),
+            ForeignKey("qrcode.id", ondelete="CASCADE"),
             nullable=True,
         ),
     )

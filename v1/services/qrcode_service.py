@@ -15,6 +15,7 @@ from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from envconfig import EnvFile
+from v1.exceptions import QRCodeGenerationError, QRCodeNotFoundInDB, QRCodeDeletionError
 from v1.models.qrcode import QRCode
 from v1.utils import compress_img
 
@@ -63,11 +64,6 @@ def decrypt(data: str) -> str:
     return plaintext.decode("utf-8")
 
 
-# A custom error for the QRCode Generator
-class QRCodeGenerationError(Exception):
-    pass
-
-
 def generate_qrcode(data: str, student_id: int) -> str:
     """
     Encrypts input data then generates and saves a styled QR code image for a student.
@@ -113,14 +109,6 @@ def generate_qrcode(data: str, student_id: int) -> str:
         raise QRCodeGenerationError(
             f"Could not generate QR code for user {student_id}: {e}"
         )
-
-
-class QRCodeDeletionError(Exception):
-    pass
-
-
-class QRCodeNotFoundInDB(Exception):
-    pass
 
 
 async def delete_qr(id: int, session: AsyncSession):
