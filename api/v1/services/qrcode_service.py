@@ -9,6 +9,7 @@ import time
 
 import qrcode
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from fastapi import UploadFile
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
@@ -119,3 +120,10 @@ async def delete_qr(id: int, session: AsyncSession):
 
     path = qrcode.url
     os.remove(path)
+
+
+async def scan_qr(qr_img: UploadFile, session: AsyncSession):
+    """
+    Scans the qr code and decrypts its content, returning the associated student.
+    """
+    pass
