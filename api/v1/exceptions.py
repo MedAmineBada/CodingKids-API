@@ -41,6 +41,21 @@ class QRCodeNotFoundError(AppException):
         super().__init__(message, status.HTTP_404_NOT_FOUND)
 
 
+class FileTypeNotSupportedError(AppException):
+    def __init__(self, message="File type is not supported."):
+        super().__init__(message, status.HTTP_400_BAD_REQUEST)
+
+
+class QRCodeScanError(AppException):
+    def __init__(self, message="QR Code scan failed."):
+        super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class NotQRCodeError(AppException):
+    def __init__(self, message="No QR Code was detected in image."):
+        super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
 class StudentImageReplaceError(AppException):
     def __init__(self, message="Failed to replace the student's image."):
         super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)

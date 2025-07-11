@@ -32,7 +32,7 @@ async def background_add_user(student: Student, session: AsyncSession):
     session.add(student)
     await session.flush()
 
-    qr_img_path = await run_in_threadpool(generate_qrcode, student.name, student.id)
+    qr_img_path = await run_in_threadpool(generate_qrcode, str(student.id), student.id)
 
     qr_code = QRCode()
     qr_code.url = qr_img_path
