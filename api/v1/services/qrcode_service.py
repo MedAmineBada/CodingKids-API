@@ -9,28 +9,25 @@ import os
 import time
 
 import qrcode
+from PIL import Image
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi import UploadFile
+from pyzbar.pyzbar import decode
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
 from sqlalchemy.ext.asyncio import AsyncSession
-from starlette.responses import JSONResponse
 
 from api.v1.exceptions import (
     QRCodeNotFoundInDBError,
     FileTypeNotSupportedError,
-    QRCodeScanError,
     NotQRCodeError,
     StudentNotFoundError,
 )
 from api.v1.models.qrcode import QRCode
-from api.v1.models.student import Student, StudentRead
+from api.v1.models.student import Student
 from api.v1.utils import compress_img
 from envconfig import EnvFile
-
-from pyzbar.pyzbar import decode
-from PIL import Image
 
 
 def get_key() -> bytes:

@@ -9,7 +9,7 @@ from db.session import get_session
 router = APIRouter(prefix="/scan", tags=["QR Code"])
 
 
-@router.post("", response_model=StudentRead, status_code=status.HTTP_200_OK)
+@router.post("/", response_model=StudentRead, status_code=status.HTTP_200_OK)
 async def scan(
     qr: UploadFile = File(...), session: AsyncSession = Depends(get_session)
 ):
