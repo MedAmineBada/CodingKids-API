@@ -4,7 +4,6 @@ import time
 
 from PIL import Image as PILImage
 from fastapi import UploadFile, HTTPException, BackgroundTasks
-from sqlalchemy import delete
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
@@ -13,6 +12,7 @@ from starlette.responses import FileResponse
 from api.v1.exceptions import (
     StudentImageReplaceError,
     StudentImageNotFoundError,
+    StudentAlreadyHasImage,
 )
 from api.v1.models.image import Image
 from api.v1.models.student import Student
@@ -68,14 +68,9 @@ async def upload_image(
         raise StudentNotFoundError()
 
     if st.image:
-        old = await session.get(Image, st.image)
-        if os.path.isfile(old.url):
-            os.remove(old.url)
+        raise StudentAlreadyHasImage()
 
-        stmt = delete(Image).where(Image.id == old.id)
-        await session.execute(stmt)
-
-    if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
+    if file.content_type not in ["image/jpeg", "image/jpg", "image/png", "image/webp"]:
         raise HTTPException(
             status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
             detail="Unsupported file type.",

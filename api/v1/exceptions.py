@@ -74,3 +74,11 @@ class StudentImageDeleteError(AppException):
 class StudentImageNotFoundError(AppException):
     def __init__(self, message="Student's Image was not found in DB."):
         super().__init__(message, status.HTTP_404_NOT_FOUND)
+
+
+class StudentAlreadyHasImage(AppException):
+    def __init__(
+        self,
+        message="Student already has an image, use the appropriate route to replace it.",
+    ):
+        super().__init__(message, status.HTTP_400_BAD_REQUEST)

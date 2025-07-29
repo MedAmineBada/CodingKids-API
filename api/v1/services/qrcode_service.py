@@ -4,15 +4,16 @@ Module for handling QR Code generation and scanning.
 
 import base64
 import hashlib
-import io
 import os
 import time
 
+import cv2
+import numpy as np
 import qrcode
-from PIL import Image
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from fastapi import UploadFile
-from pyzbar.pyzbar import decode
+from pyzbar import pyzbar
+from pyzbar.wrapper import ZBarSymbol
 from qrcode.image.styledpil import StyledPilImage
 from qrcode.image.styles.colormasks import SolidFillColorMask
 from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
@@ -131,30 +132,79 @@ async def delete_qr(id: int, session: AsyncSession):
 
 async def scan_qr(qr_img: UploadFile, session: AsyncSession):
     """
-    Scans a QR code image, decrypts its content, and returns the associated student.
+    Scans a QR code image using advanced preprocessing and multiple detection strategies.
+    Handles large images, poor contrast, and orientation issues common in phone images.
     """
-
-    # Validate that the uploaded file is an image
-    if qr_img.content_type.split("/")[0] != "image":
+    # Validate file type
+    if not qr_img.content_type.startswith("image/"):
         raise FileTypeNotSupportedError()
 
     contents = await qr_img.read()
 
-    # Load the image from bytes using PIL
-    image = Image.open(io.BytesIO(contents))
+    # Convert to OpenCV image
+    nparr = np.frombuffer(contents, np.uint8)
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    if img is None:
+        raise NotQRCodeError("Invalid image data")
 
-    decoded = decode(image)
+    # Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    if not decoded:  # If no QR code is detected
+    # Resize large images while maintaining aspect ratio
+    max_size = 1600  # Higher resolution for small QR codes
+    height, width = gray.shape
+    if max(height, width) > max_size:
+        scale = max_size / max(height, width)
+        new_w = int(width * scale)
+        new_h = int(height * scale)
+        gray = cv2.resize(gray, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+
+    # Preprocessing techniques
+    preprocessed = [
+        gray,  # Original grayscale
+        cv2.GaussianBlur(gray, (5, 5), 0),  # Reduce noise
+        cv2.adaptiveThreshold(
+            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2
+        ),  # Adaptive thresholding
+        cv2.adaptiveThreshold(
+            gray, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2
+        ),  # Alternative thresholding
+    ]
+
+    # Try multiple preprocessing methods
+    decoded = None
+    for image in preprocessed:
+        decoded = pyzbar.decode(image, symbols=[ZBarSymbol.QRCODE])
+        if decoded:
+            break
+
+        # Try rotated versions
+        for angle in [90, 180, 270]:
+            rotated = cv2.rotate(image, get_rotation_code(angle))
+            decoded = pyzbar.decode(rotated, symbols=[ZBarSymbol.QRCODE])
+            if decoded:
+                break
+        if decoded:
+            break
+
+    if not decoded:
         raise NotQRCodeError()
 
-    # Get the data from the first QR code found and decode it to a string
+    # Get the first valid result
     first = decoded[0].data.decode("utf-8", errors="replace")
-
     student_id = decrypt(first)
     student = await session.get(Student, student_id)
 
-    if not student:  # If the student is not found in the database
+    if not student:
         raise StudentNotFoundError()
 
     return student
+
+
+def get_rotation_code(angle: int) -> int:
+    """Maps angle to OpenCV rotation code"""
+    return {
+        90: cv2.ROTATE_90_CLOCKWISE,
+        180: cv2.ROTATE_180,
+        270: cv2.ROTATE_90_COUNTERCLOCKWISE,
+    }[angle]

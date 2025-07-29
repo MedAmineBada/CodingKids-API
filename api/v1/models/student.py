@@ -62,6 +62,7 @@ class StudentCreate(BaseModel):
 
 
 class StudentRead(BaseModel):
+    id: int
     name: str
     birth_date: date
     tel1: str
