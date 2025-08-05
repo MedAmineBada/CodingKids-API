@@ -16,6 +16,12 @@ from api.v1.exceptions import StudentImageSaveError
 from envconfig import EnvFile
 
 
+def clean_spaces(text: str) -> str:
+    stripped = text.strip()
+    cleaned = " ".join(stripped.split())
+    return cleaned
+
+
 def verif_str(input_str: str) -> bool:
     """
     Validate that a string is non-empty and contains only alphabetic characters.
