@@ -22,9 +22,10 @@ from api.v1.services.qrcode_service import (
     generate_qrcode,
     QRCodeNotFoundInDBError,
 )
+from api.v1.utils import clean_spaces
 
 
-async def background_add_user(student: Student, session: AsyncSession):
+async def background_add_student(student: Student, session: AsyncSession):
     """
     This function handles the background tasks for adding students to the database.
     Helps with response times.
@@ -51,8 +52,12 @@ async def add_student(
     Creates a Student and his QR code, then insert both into the database.
     """
     db_student = Student.model_validate(new_student)
-    db_student.name = db_student.name.title()
-    bgt.add_task(background_add_user, db_student, session)
+    db_student.name = clean_spaces(db_student.name).title()
+
+    if db_student.email:
+        db_student.email = db_student.email.lower()
+
+    bgt.add_task(background_add_student, db_student, session)
     return {"Success": "Student created"}
 
 
@@ -139,6 +144,13 @@ async def update_student(student_id: int, data: StudentCreate, session: AsyncSes
     student = await session.get(Student, student_id)
     if not student:
         raise StudentNotFoundError()
+
+    data.name = clean_spaces(data.name).title()
+
+    if data.email:
+        data.email = data.email.lower()
+    else:
+        data.email = None
 
     student_data = data.model_dump(exclude_unset=True)
 
