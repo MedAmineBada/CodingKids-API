@@ -136,6 +136,7 @@ async def replace_image(
 
         student.image = new_img.id
         session.add(student)
+
     await session.commit()
     return {"success": "image replaced"}
 
