@@ -25,28 +25,6 @@ from api.v1.services.qrcode_service import (
 from api.v1.utils import clean_spaces
 
 
-async def background_add_student(student: Student, session: AsyncSession):
-    """
-    This function handles the background tasks for adding students to the database.
-    Helps with response times.
-    """
-
-    qr_img_path = await run_in_threadpool(generate_qrcode, str(student.id), student.id)
-    qr_code = QRCode()
-    qr_code.url = qr_img_path
-
-    session.add(qr_code)
-
-    await session.flush()
-
-    student.qrcode = qr_code.id
-
-    session.add(student)
-    await session.commit()
-
-    await session.commit()
-
-
 async def add_student(
     new_student: StudentCreate, session: AsyncSession, bgt: BackgroundTasks
 ):
@@ -63,7 +41,24 @@ async def add_student(
     session.add(db_student)
     await session.commit()
 
-    bgt.add_task(background_add_student, db_student, session)
+    qr_code = QRCode()
+
+    qr_img_path = await run_in_threadpool(
+        generate_qrcode, str(db_student.id), db_student.id
+    )
+
+    qr_code.url = qr_img_path
+
+    session.add(qr_code)
+
+    await session.flush()
+
+    db_student.qrcode = qr_code.id
+
+    session.add(db_student)
+
+    await session.commit()
+
     return {"Success": "Student created", "id": db_student.id}
 
 
