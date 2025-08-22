@@ -64,21 +64,36 @@ async def add_student(
 
 async def get_all_students(
     session: AsyncSession,
-    order_by: Optional[str] = "name",
+    order_by: Optional[str] = "-id",
     name_search: Optional[str] = None,
 ):
     order_columns = {
+        "id": Student.id,
         "name": Student.name,
         "birth_date": Student.birth_date,
     }
-    order_column = order_columns.get(order_by, Student.name)
+
+    if order_by:
+        direction = "asc"
+        col_key = order_by
+        if order_by.startswith("-"):
+            direction = "desc"
+            col_key = order_by[1:]
+    else:
+        direction = "desc"
+        col_key = "id"
+
+    order_column = order_columns.get(col_key, Student.id)
 
     stmt = select(Student)
 
     if name_search:
         stmt = stmt.where(func.lower(Student.name).like(f"%{name_search.lower()}%"))
 
-    stmt = stmt.order_by(order_column)
+    if direction == "desc":
+        stmt = stmt.order_by(order_column.desc())
+    else:
+        stmt = stmt.order_by(order_column.asc())
 
     query = await session.execute(stmt)
     results = query.scalars().all()

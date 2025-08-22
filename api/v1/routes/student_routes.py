@@ -33,7 +33,7 @@ router.include_router(image_routes.router)
     tags=["Students"],
 )
 async def get_all(
-    order_by: Optional[str] = Query("name"),
+    order_by: Optional[str] = Query(None),
     name_search: Optional[str] = Query(None),
     session: AsyncSession = Depends(get_session),
 ):
