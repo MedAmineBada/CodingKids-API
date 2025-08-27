@@ -54,16 +54,6 @@ def verif_tel_number(input_num: str) -> bool:
     return True
 
 
-def verif_birth_date(dob: date) -> bool:
-    today = date.today()
-    if dob >= today:
-        return False
-    age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-    if age < 0:
-        return False
-    return True
-
-
 async def save_image(file: UploadFile, output_path: str):
     if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
         raise HTTPException(
@@ -92,3 +82,17 @@ def compress_img(src: str, dest: str):
             lossless=True,
             quality=100,
         )
+
+
+def valid_date(input_date: date) -> bool:
+    today = date.today()
+    if input_date >= today:
+        return False
+    diff = (
+        today.year
+        - input_date.year
+        - ((today.month, today.day) < (input_date.month, input_date.day))
+    )
+    if diff < 0:
+        return False
+    return True

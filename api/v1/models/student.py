@@ -12,7 +12,8 @@ from pydantic import model_validator, BaseModel, EmailStr, field_validator
 from sqlalchemy import ForeignKey, Column, Integer
 from sqlmodel import Field, SQLModel
 
-from api.v1.utils import verif_str, verif_tel_number, verif_birth_date
+from api.v1.exceptions import DateNotValid
+from api.v1.utils import verif_str, verif_tel_number, valid_date
 
 
 class StudentCreate(BaseModel):
@@ -50,8 +51,8 @@ class StudentCreate(BaseModel):
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
         if not verif_str(getattr(m, "name")):
             raise ValueError("Name does not meet requirements")
-        if not verif_birth_date(getattr(m, "birth_date")):
-            raise ValueError("Date of birth does not meet requirements")
+        if not valid_date(getattr(m, "birth_date")):
+            raise DateNotValid()
         if not verif_tel_number(getattr(m, "tel1")):
             raise ValueError("Telephone number 1 does not meet requirements")
         if not verif_tel_number(getattr(m, "tel2")):

@@ -82,3 +82,19 @@ class StudentAlreadyHasImage(AppException):
         message="Student already has an image, use the appropriate route to replace it.",
     ):
         super().__init__(message, status.HTTP_400_BAD_REQUEST)
+
+
+class DateNotValid(AppException):
+    def __init__(
+        self,
+        message="The date is not valid.",
+    ):
+        super().__init__(message, status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+class AlreadyExists(AppException):
+    def __init__(
+        self,
+        message="This resource already exists.",
+    ):
+        super().__init__(message, status.HTTP_409_CONFLICT)
