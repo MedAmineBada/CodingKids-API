@@ -16,11 +16,6 @@ class AppException(Exception):
         super().__init__(self.message)
 
 
-class StudentNotFoundError(AppException):
-    def __init__(self, message="Student was not found in DB."):
-        super().__init__(message, status.HTTP_404_NOT_FOUND)
-
-
 class QRCodeGenerationError(AppException):
     def __init__(self, message="Failed to generate the QR Code."):
         super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -29,16 +24,6 @@ class QRCodeGenerationError(AppException):
 class QRCodeDeletionError(AppException):
     def __init__(self, message="Failed to delete the QR Code."):
         super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class QRCodeNotFoundInDBError(AppException):
-    def __init__(self, message="QR Code was not found in DB."):
-        super().__init__(message, status.HTTP_404_NOT_FOUND)
-
-
-class QRCodeNotFoundError(AppException):
-    def __init__(self, message="QR Code image was not found."):
-        super().__init__(message, status.HTTP_404_NOT_FOUND)
 
 
 class FileTypeNotSupportedError(AppException):
@@ -71,11 +56,6 @@ class StudentImageDeleteError(AppException):
         super().__init__(message, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class StudentImageNotFoundError(AppException):
-    def __init__(self, message="Student's Image was not found in DB."):
-        super().__init__(message, status.HTTP_404_NOT_FOUND)
-
-
 class StudentAlreadyHasImage(AppException):
     def __init__(
         self,
@@ -98,3 +78,11 @@ class AlreadyExists(AppException):
         message="This resource already exists.",
     ):
         super().__init__(message, status.HTTP_409_CONFLICT)
+
+
+class NotFoundException(AppException):
+    def __init__(
+        self,
+        message="This resource was not found.",
+    ):
+        super().__init__(message, status.HTTP_404_NOT_FOUND)

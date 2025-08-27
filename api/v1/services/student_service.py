@@ -10,9 +10,8 @@ from starlette.concurrency import run_in_threadpool
 from starlette.responses import FileResponse
 
 from api.v1.exceptions import (
-    StudentNotFoundError,
     StudentImageDeleteError,
-    QRCodeNotFoundError,
+    NotFoundException,
     QRCodeDeletionError,
 )
 from api.v1.models.image import Image
@@ -20,7 +19,6 @@ from api.v1.models.qrcode import QRCode
 from api.v1.models.student import Student, StudentCreate
 from api.v1.services.qrcode_service import (
     generate_qrcode,
-    QRCodeNotFoundInDBError,
 )
 from api.v1.utils import clean_spaces
 
@@ -106,7 +104,7 @@ async def get_student(student_id: int, session: AsyncSession):
     """
     student = await session.get(Student, student_id)
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This student was not found.")
 
     return student
 
@@ -117,7 +115,7 @@ async def delete_student(student_id: int, session: AsyncSession):
     """
     student = await session.get(Student, student_id)
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This student was not found.")
 
     img_id = student.image
     qr_id = student.qrcode
@@ -159,7 +157,7 @@ async def delete_student(student_id: int, session: AsyncSession):
 async def update_student(student_id: int, data: StudentCreate, session: AsyncSession):
     student = await session.get(Student, student_id)
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This student was not found.")
 
     data.name = clean_spaces(data.name).title()
 
@@ -185,14 +183,14 @@ async def get_qr_code(student_id: int, session: AsyncSession):
     """
     student = await session.get(Student, student_id)
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This student was not found.")
 
     qrcode = await session.get(QRCode, student.qrcode)
     if not qrcode:
         raise QRCodeNotFoundInDBError()
 
     if not os.path.exists(qrcode.url):
-        raise QRCodeNotFoundError()
+        raise NotFoundException("QR Code image was not found.")
 
     return FileResponse(
         status_code=status.HTTP_200_OK,

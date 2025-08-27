@@ -9,14 +9,13 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from starlette import status
 from starlette.responses import FileResponse
 
+from api.v1.exceptions import NotFoundException
 from api.v1.exceptions import (
     StudentImageReplaceError,
-    StudentImageNotFoundError,
     StudentAlreadyHasImage,
 )
 from api.v1.models.image import Image
 from api.v1.models.student import Student
-from api.v1.services.student_service import StudentNotFoundError
 from api.v1.utils import StudentImageSaveError, compress_img
 from envconfig import EnvFile
 
@@ -38,12 +37,12 @@ async def get_image(student: int, session: AsyncSession):
     """
     student = await session.get(Student, student)
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This student was not found.")
 
     img: Image = await session.get(Image, student.image)
 
     if not img:
-        raise StudentImageNotFoundError()
+        raise NotFoundException("The student's image was not found.")
 
     return FileResponse(
         status_code=status.HTTP_200_OK,
@@ -65,7 +64,7 @@ async def upload_image(
     path = f"{EnvFile.STUDENT_IMAGE_SAVE_DIR}/AV{student_id}-{time.time()}.webp"
     st = await session.get(Student, student_id)
     if not st:
-        raise StudentNotFoundError()
+        raise NotFoundException("This student was not found.")
 
     if st.image:
         raise StudentAlreadyHasImage()
@@ -109,7 +108,7 @@ async def replace_image(
     student = await session.get(Student, student_id)
 
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This Student was not found.")
 
     stmt = select(Image).where(Image.id == student.image)
     old_img_query = await session.execute(stmt)
@@ -147,7 +146,7 @@ async def delete_image(
 ):
     student = await session.get(Student, student_id)
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This Student was not found.")
 
     if student.image:
         img_id = student.image

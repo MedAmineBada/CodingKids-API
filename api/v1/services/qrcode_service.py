@@ -20,10 +20,9 @@ from qrcode.image.styles.moduledrawers import RoundedModuleDrawer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.v1.exceptions import (
-    QRCodeNotFoundInDBError,
     FileTypeNotSupportedError,
     NotQRCodeError,
-    StudentNotFoundError,
+    NotFoundException,
 )
 from api.v1.models.qrcode import QRCode
 from api.v1.models.student import Student
@@ -124,7 +123,7 @@ async def delete_qr(id: int, session: AsyncSession):
     """
     qrcode = await session.get(QRCode, id)
     if not qrcode:
-        raise QRCodeNotFoundInDBError()
+        raise NotFoundException("QR Code was not found in DB.")
 
     path = qrcode.url
     os.remove(path)
@@ -196,7 +195,7 @@ async def scan_qr(qr_img: UploadFile, session: AsyncSession):
     student = await session.get(Student, student_id)
 
     if not student:
-        raise StudentNotFoundError()
+        raise NotFoundException("This student was not found.")
 
     return student
 

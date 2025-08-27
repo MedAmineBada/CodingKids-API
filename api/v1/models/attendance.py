@@ -15,7 +15,7 @@ from api.v1.exceptions import DateNotValid
 from api.v1.utils import valid_date
 
 
-class AttendanceCreate(BaseModel):
+class AttendanceModel(BaseModel):
     student_id: int
     attend_date: date
 
@@ -59,3 +59,10 @@ class Attendance(SQLModel, table=True):
         ),
     )
     attend_date: date = Field(primary_key=True, index=True)
+
+
+class AttendanceDates(BaseModel):
+    attend_date: date
+
+    class Config:
+        orm_mode = True
