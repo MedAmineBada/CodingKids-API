@@ -54,6 +54,25 @@ def verif_tel_number(input_num: str) -> bool:
     return True
 
 
+def verif_cin(input_num) -> bool:
+    """
+    Validates whether a string is a valid CIN.
+
+    A valid phone number must:
+      - Contain only digits
+      - Be exactly 8 characters long
+      - Not be empty
+    """
+    stripped = input_num.replace(" ", "")
+    if not stripped:
+        return False
+    if not stripped.isdigit():
+        return False
+    if len(stripped) != 8:
+        return False
+    return True
+
+
 async def save_image(file: UploadFile, output_path: str):
     if file.content_type not in ["image/jpeg", "image/png", "image/webp"]:
         raise HTTPException(
