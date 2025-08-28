@@ -12,6 +12,7 @@ async def add_payment(payment_model: PaymentModel, session: AsyncSession):
     )
     if payment:
         raise AlreadyExists("Student already paid on this date.")
+
     student = await session.get(Student, payment_model.student_id)
     if not student:
         raise NotFoundException()

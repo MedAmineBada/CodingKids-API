@@ -12,6 +12,7 @@ async def add_attendance(attendance_model: AttendanceModel, session: AsyncSessio
     )
     if attendance:
         raise AlreadyExists("Student already attended on this date.")
+
     student = await session.get(Student, attendance_model.student_id)
     if not student:
         raise NotFoundException()

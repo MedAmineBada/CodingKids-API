@@ -13,10 +13,11 @@ from api.v1.models.payment import Payment
 # Import models to ensure they are registered with SQLModel.metadata
 from api.v1.models.qrcode import QRCode
 from api.v1.models.student import Student
+from api.v1.models.teacher import Teacher
 from .engine import creator_engine
 
 # To keep formatters from removing their imports
-_models = QRCode, Student, Image, Attendance, Payment
+_models = QRCode, Student, Image, Attendance, Payment, Teacher
 
 
 async def init_db():
