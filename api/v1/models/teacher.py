@@ -14,7 +14,7 @@ from api.v1.utils import verif_str, verif_tel_number, verif_cin
 
 
 class TeacherModel(BaseModel):
-    cin: int
+    cin: str
     name: str
     tel: str
     email: Optional[EmailStr] = None
@@ -45,7 +45,7 @@ class TeacherModel(BaseModel):
 
 
 class Teacher(SQLModel, table=True):
-    cin: int = Field(
+    cin: str = Field(
         default=None, primary_key=True, index=True, max_length=8, nullable=False
     )
     name: str = Field(..., nullable=False)

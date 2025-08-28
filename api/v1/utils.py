@@ -54,7 +54,7 @@ def verif_tel_number(input_num: str) -> bool:
     return True
 
 
-def verif_cin(input_num) -> bool:
+def verif_cin(input_num: str) -> bool:
     """
     Validates whether a string is a valid CIN.
 
