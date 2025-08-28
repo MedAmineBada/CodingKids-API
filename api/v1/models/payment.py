@@ -1,7 +1,7 @@
 """
-Attendance Table Model
+Payment Table Model
 
-Defines the `Attendance` table using SQLModel.
+Defines the `Payment` table using SQLModel.
 """
 
 from datetime import date
@@ -15,16 +15,16 @@ from api.v1.exceptions import DateNotValid
 from api.v1.utils import valid_date
 
 
-class AttendanceModel(BaseModel):
+class PaymentModel(BaseModel):
     student_id: int
-    attend_date: date
+    payment_date: date
 
     class Config:
         orm_mode = True
 
-    @field_validator("attend_date", mode="before")
+    @field_validator("payment_date", mode="before")
     @classmethod
-    def _parse_attend_date(cls, v):
+    def _parse_payment_date(cls, v):
         if isinstance(v, str):
             # throw error if the format is wrong
             return date.fromisoformat(v)
@@ -36,21 +36,21 @@ class AttendanceModel(BaseModel):
         """
         Validates that:
         - All fields are present
-        - `attendance_date` meets the format requirements
+        - `payment_date` meets the format requirements
         """
 
-        missing = [f for f in ("student_id", "attend_date") if getattr(m, f) is None]
+        missing = [f for f in ("student_id", "payment_date") if getattr(m, f) is None]
 
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
 
-        if not valid_date(getattr(m, "attend_date")):
+        if not valid_date(getattr(m, "payment_date")):
             raise DateNotValid()
 
         return m
 
 
-class Attendance(SQLModel, table=True):
+class Payment(SQLModel, table=True):
     student_id: int = Field(
         sa_column=Column(
             ForeignKey("student.id", ondelete="CASCADE"),
@@ -58,11 +58,11 @@ class Attendance(SQLModel, table=True):
             index=True,
         ),
     )
-    attend_date: date = Field(primary_key=True, index=True)
+    payment_date: date = Field(primary_key=True, index=True)
 
 
-class AttendanceDates(BaseModel):
-    attend_date: date
+class PaymentDates(BaseModel):
+    payment_date: date
 
     class Config:
         orm_mode = True

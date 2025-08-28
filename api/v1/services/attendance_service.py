@@ -6,21 +6,21 @@ from api.v1.models.attendance import Attendance, AttendanceModel
 from api.v1.models.student import Student
 
 
-async def add_attendance(attendance: AttendanceModel, session: AsyncSession):
+async def add_attendance(attendance_model: AttendanceModel, session: AsyncSession):
     attendance = await session.get(
-        Attendance, [attendance.student_id, attendance.attend_date]
+        Attendance, [attendance_model.student_id, attendance_model.attend_date]
     )
     if attendance:
         raise AlreadyExists("Student already attended on this date.")
-    student = await session.get(Student, attendance.student_id)
+    student = await session.get(Student, attendance_model.student_id)
     if not student:
         raise NotFoundException()
 
-    att = Attendance.model_validate(attendance)
+    att = Attendance.model_validate(attendance_model)
 
     session.add(att)
     await session.commit()
-    return {"success": "Attendance added successfully"}
+    return {"success": "Attendance added successfully."}
 
 
 async def get_attendances(student_id: int, session: AsyncSession):
