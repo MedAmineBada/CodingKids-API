@@ -22,6 +22,10 @@ def clean_spaces(text: str) -> str:
     return cleaned
 
 
+def remove_spaces(text: str) -> str:
+    return text.replace(" ", "")
+
+
 def verif_str(input_str: str) -> bool:
     """
     Validate that a string is non-empty and contains only alphabetic characters.

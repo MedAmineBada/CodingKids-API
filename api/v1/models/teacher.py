@@ -45,9 +45,10 @@ class TeacherModel(BaseModel):
 
 
 class Teacher(SQLModel, table=True):
-    cin: str = Field(
+    id: int = Field(
         default=None, primary_key=True, index=True, max_length=8, nullable=False
     )
+    cin: str = Field(max_length=8, nullable=False)
     name: str = Field(..., nullable=False)
     tel: str = Field(..., max_length=8, nullable=False)
     email: Optional[EmailStr] = Field(default=None)

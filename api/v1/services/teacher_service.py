@@ -1,8 +1,12 @@
+from typing import Optional
+
+from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import select
 
 from api.v1.exceptions import AlreadyExists
 from api.v1.models.teacher import TeacherModel, Teacher
-from api.v1.utils import clean_spaces
+from api.v1.utils import clean_spaces, remove_spaces
 
 
 async def add_teacher(teacher_model: TeacherModel, session: AsyncSession):
@@ -24,3 +28,44 @@ async def add_teacher(teacher_model: TeacherModel, session: AsyncSession):
     await session.commit()
 
     return "Successfully added teacher"
+
+
+async def get_teachers(
+    session: AsyncSession, search: Optional[str] = None, order_by: Optional[str] = "-id"
+):
+    order_columns = {
+        "id": Teacher.id,
+        "name": Teacher.name,
+        "cin": Teacher.cin,
+    }
+
+    stmt = select(Teacher)
+
+    if search and remove_spaces(search).isdigit():
+        stmt = stmt.where(func.lower(Teacher.cin).like(f"%{remove_spaces(search)}%"))
+
+    elif search and remove_spaces(search).isalpha():
+        stmt = stmt.where(
+            func.lower(Teacher.name).like(f"%{clean_spaces(search).lower()}%")
+        )
+
+    if order_by:
+        direction = "asc"
+        col_key = order_by
+        if order_by.startswith("-"):
+            direction = "desc"
+            col_key = order_by[1:]
+    else:
+        direction = "desc"
+        col_key = "id"
+
+    order_column = order_columns.get(col_key, Teacher.id)
+
+    if direction == "desc":
+        stmt = stmt.order_by(order_column.desc())
+    else:
+        stmt = stmt.order_by(order_column.asc())
+
+    query = await session.execute(stmt)
+    results = query.scalars().all()
+    return results

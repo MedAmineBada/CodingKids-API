@@ -86,7 +86,9 @@ async def get_all_students(
     stmt = select(Student)
 
     if name_search:
-        stmt = stmt.where(func.lower(Student.name).like(f"%{name_search.lower()}%"))
+        stmt = stmt.where(
+            func.lower(Student.name).like(f"%{clean_spaces(name_search).lower()}%")
+        )
 
     if direction == "desc":
         stmt = stmt.order_by(order_column.desc())
