@@ -8,6 +8,7 @@ from typing import Optional
 
 from fastapi.openapi.models import Contact
 from pydantic import model_validator, BaseModel, EmailStr
+from sqlalchemy import Column, Integer, ForeignKey
 from sqlmodel import Field, SQLModel
 
 from api.v1.utils import verif_str, verif_tel_number, verif_cin
@@ -18,6 +19,7 @@ class TeacherModel(BaseModel):
     name: str
     tel: str
     email: Optional[EmailStr] = None
+    cv: Optional[int] = None
 
     class Config:
         orm_mode = True
@@ -52,3 +54,11 @@ class Teacher(SQLModel, table=True):
     name: str = Field(..., nullable=False)
     tel: str = Field(..., max_length=8, nullable=False)
     email: Optional[EmailStr] = Field(default=None)
+    cv: Optional[int] = Field(
+        default=None,
+        sa_column=Column(
+            Integer,
+            ForeignKey("cvfile.id", ondelete="CASCADE", onupdate="CASCADE"),
+            nullable=True,
+        ),
+    )

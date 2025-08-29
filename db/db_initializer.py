@@ -8,6 +8,7 @@ tables are created in the database if they do not exist. .
 from sqlmodel import SQLModel
 
 from api.v1.models.attendance import Attendance
+from api.v1.models.cvfile import CVFile
 from api.v1.models.image import Image
 from api.v1.models.payment import Payment
 # Import models to ensure they are registered with SQLModel.metadata
@@ -17,7 +18,7 @@ from api.v1.models.teacher import Teacher
 from .engine import creator_engine
 
 # To keep formatters from removing their imports
-_models = QRCode, Student, Image, Attendance, Payment, Teacher
+_models = (QRCode, Student, Image, Attendance, Payment, Teacher, CVFile)
 
 
 async def init_db():
