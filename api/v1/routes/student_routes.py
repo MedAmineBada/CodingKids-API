@@ -13,7 +13,7 @@ from starlette import status
 from api.v1.models.student import StudentCreate, StudentRead
 from api.v1.services.student_service import (
     add_student,
-    get_student,
+    get_student_by_id,
     delete_student,
     update_student,
     get_all_students,
@@ -48,7 +48,7 @@ async def get(id: int, session: AsyncSession = Depends(get_session)):
     """
     Handles the retrieval of a student.
     """
-    return await get_student(id, session)
+    return await get_student_by_id(id, session)
 
 
 @router.post("/add", status_code=status.HTTP_201_CREATED, tags=["Students"])

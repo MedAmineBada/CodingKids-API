@@ -4,7 +4,7 @@ from sqlalchemy import func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
-from api.v1.exceptions import AlreadyExists
+from api.v1.exceptions import AlreadyExists, NotFoundException
 from api.v1.models.teacher import TeacherModel, Teacher
 from api.v1.utils import clean_spaces, remove_spaces
 
@@ -69,3 +69,44 @@ async def get_teachers(
     query = await session.execute(stmt)
     results = query.scalars().all()
     return results
+
+
+async def delete_teacher(teacher_id: int, session: AsyncSession):
+    teacher = await session.get(Teacher, teacher_id)
+    if not teacher:
+        raise NotFoundException("Teacher not found.")
+    else:
+        await session.delete(teacher)
+        await session.commit()
+        return {"Teacher deleted."}
+
+
+async def update_teacher(teacher_id: int, data: TeacherModel, session: AsyncSession):
+    teacher = await session.get(Teacher, teacher_id)
+    if not teacher:
+        raise NotFoundException("Teacher not found.")
+
+    data.name = clean_spaces(data.name).title()
+
+    if data.email:
+        data.email = data.email.lower()
+    else:
+        data.email = None
+
+    teacher_data = data.model_dump(exclude_unset=True)
+
+    for key, value in teacher_data.items():
+        setattr(teacher, key, value)
+
+    session.add(teacher)
+    await session.commit()
+
+    return {"Success": "Teacher updated."}
+
+
+async def get_teacher_by_id(teacher_id: int, session: AsyncSession):
+    teacher = await session.get(Teacher, teacher_id)
+    if not teacher:
+        raise NotFoundException("Teacher not found.")
+    else:
+        return teacher

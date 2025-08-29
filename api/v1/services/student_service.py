@@ -100,7 +100,7 @@ async def get_all_students(
     return results
 
 
-async def get_student(student_id: int, session: AsyncSession):
+async def get_student_by_id(student_id: int, session: AsyncSession):
     """
     Retrieves a Student by ID and returns his data.
     """
@@ -125,7 +125,7 @@ async def delete_student(student_id: int, session: AsyncSession):
     await session.delete(student)
 
     if not qr_id:
-        raise QRCodeNotFoundInDBError()
+        raise NotFoundException("QR Code was not found in DB.")
 
     qr = await session.get(QRCode, qr_id)
     try:
@@ -189,7 +189,7 @@ async def get_qr_code(student_id: int, session: AsyncSession):
 
     qrcode = await session.get(QRCode, student.qrcode)
     if not qrcode:
-        raise QRCodeNotFoundInDBError()
+        raise NotFoundException("This student was not found.")
 
     if not os.path.exists(qrcode.url):
         raise NotFoundException("QR Code image was not found.")
