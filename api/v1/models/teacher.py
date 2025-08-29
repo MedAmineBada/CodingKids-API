@@ -58,7 +58,7 @@ class Teacher(SQLModel, table=True):
         default=None,
         sa_column=Column(
             Integer,
-            ForeignKey("cvfile.id", ondelete="CASCADE", onupdate="CASCADE"),
+            ForeignKey("cvfile.id"),
             nullable=True,
         ),
     )

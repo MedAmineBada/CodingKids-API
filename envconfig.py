@@ -20,6 +20,7 @@ class EnvFile(BaseSettings):
 
     QR_CODE_SAVE_DIR: str
     STUDENT_IMAGE_SAVE_DIR: str
+    CV_SAVE_DIR: str
     CK_LOGO_DIR: str
 
     ENCRYPTION_KEY: str

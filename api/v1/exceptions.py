@@ -86,3 +86,11 @@ class NotFoundException(AppException):
         message="This resource was not found.",
     ):
         super().__init__(message, status.HTTP_404_NOT_FOUND)
+
+
+class UnprocessableEntityException(AppException):
+    def __init__(
+        self,
+        message="This resource's type or value is incorrect.",
+    ):
+        super().__init__(message, status.HTTP_422_UNPROCESSABLE_ENTITY)
