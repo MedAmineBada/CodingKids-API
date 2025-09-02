@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from api.v1.models.attendance import AttendanceModel, AttendanceDates
+from api.v1.models.attendance import AttendanceModel
 from api.v1.services.attendance_service import add_attendance, get_attendances
 from db.session import get_session
 
@@ -26,7 +26,7 @@ async def add(
 
 @router.get(
     "/{student_id}",
-    response_model=List[AttendanceDates],
+    response_model=List[str],
     status_code=status.HTTP_200_OK,
 )
 async def get(student_id: int, session: AsyncSession = Depends(get_session)):

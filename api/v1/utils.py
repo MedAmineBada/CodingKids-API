@@ -109,7 +109,7 @@ def compress_img(src: str, dest: str):
 
 def valid_date(input_date: date) -> bool:
     today = date.today()
-    if input_date >= today:
+    if input_date > today:
         return False
     diff = (
         today.year

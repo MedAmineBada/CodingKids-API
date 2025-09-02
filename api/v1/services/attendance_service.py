@@ -31,6 +31,10 @@ async def get_attendances(student_id: int, session: AsyncSession):
         .order_by(Attendance.attend_date.desc())
     )
     res = await session.execute(stmt)
-    if not res:
+    attendances = res.scalars().all()
+
+    if not attendances:
         raise NotFoundException("No attendances found for this student.")
-    return res.scalars().all()
+
+    # Convert dates to string
+    return [att.attend_date.isoformat() for att in attendances]
