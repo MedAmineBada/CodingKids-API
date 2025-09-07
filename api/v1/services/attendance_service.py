@@ -1,4 +1,4 @@
-from sqlmodel import select
+from sqlmodel import select, and_
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from api.v1.exceptions import AlreadyExists, NotFoundException
@@ -38,3 +38,19 @@ async def get_attendances(student_id: int, session: AsyncSession):
 
     # Convert dates to string
     return [att.attend_date.isoformat() for att in attendances]
+
+
+async def delete_attendance(attendance_model: AttendanceModel, session: AsyncSession):
+    stmt = select(Attendance).where(
+        and_(
+            Attendance.student_id == attendance_model.student_id,
+            Attendance.attend_date == attendance_model.attend_date,
+        )
+    )
+    res = await session.execute(stmt)
+    result = res.scalars().first()
+    if not result:
+        raise NotFoundException("No attendances found for this student on this date.")
+    await session.delete(result)
+    await session.commit()
+    return {"success": "Attendance deleted successfully."}

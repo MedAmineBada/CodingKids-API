@@ -11,7 +11,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api.v1.models.attendance import AttendanceModel
-from api.v1.services.attendance_service import add_attendance, get_attendances
+from api.v1.services.attendance_service import (
+    add_attendance,
+    get_attendances,
+    delete_attendance,
+)
 from db.session import get_session
 
 router = APIRouter(prefix="/attendances", tags=["Attendance"])
@@ -31,3 +35,10 @@ async def add(
 )
 async def get(student_id: int, session: AsyncSession = Depends(get_session)):
     return await get_attendances(student_id, session)
+
+
+@router.delete("/delete", status_code=status.HTTP_200_OK)
+async def delete(
+    attendance_model: AttendanceModel, session: AsyncSession = Depends(get_session)
+):
+    return await delete_attendance(attendance_model, session)
