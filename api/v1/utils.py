@@ -119,3 +119,20 @@ def valid_date(input_date: date) -> bool:
     if diff < 0:
         return False
     return True
+
+
+def valid_month(month: int) -> bool:
+    if not isinstance(month, int):
+        return False
+    if month < 1 or month > 12:
+        return False
+    return True
+
+
+def valid_year(year: int) -> bool:
+    today = date.today()
+    if not isinstance(year, int):
+        return False
+    if year > today.year:
+        return False
+    return True

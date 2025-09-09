@@ -12,12 +12,15 @@ from sqlalchemy import Column
 from sqlmodel import SQLModel, Field, ForeignKey
 
 from api.v1.exceptions import DateNotValid
-from api.v1.utils import valid_date
+from api.v1.utils import valid_date, valid_month, valid_year
 
 
 class PaymentModel(BaseModel):
     student_id: int
+    month: int
+    year: int
     payment_date: date
+    amount: float
 
     class Config:
         orm_mode = True
@@ -39,14 +42,22 @@ class PaymentModel(BaseModel):
         - `payment_date` meets the format requirements
         """
 
-        missing = [f for f in ("student_id", "payment_date") if getattr(m, f) is None]
+        missing = [
+            f
+            for f in ("student_id", "month", "year", "payment_date", "amount")
+            if getattr(m, f) is None
+        ]
 
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
-
+        if not valid_month(getattr(m, "month")):
+            raise ValueError(f"Invalid month: {getattr(m, 'month')}")
+        if not valid_year(getattr(m, "year")):
+            raise ValueError(f"Invalid year: {getattr(m, 'year')}")
         if not valid_date(getattr(m, "payment_date")):
             raise DateNotValid()
-
+        if getattr(m, "amount") < 0:
+            raise ValueError(f"Amount must be Positive: {getattr(m, 'amount')}")
         return m
 
 
@@ -58,7 +69,10 @@ class Payment(SQLModel, table=True):
             index=True,
         ),
     )
-    payment_date: date = Field(primary_key=True, index=True)
+    month: int = Field(primary_key=True, index=True)
+    year: int = Field(primary_key=True, index=True)
+    payment_date: date = Field(default=None, nullable=False)
+    amount: float = Field(default=None, nullable=False)
 
 
 class PaymentDates(BaseModel):

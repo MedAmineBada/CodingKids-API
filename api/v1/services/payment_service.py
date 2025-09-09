@@ -8,10 +8,10 @@ from api.v1.models.student import Student
 
 async def add_payment(payment_model: PaymentModel, session: AsyncSession):
     payment = await session.get(
-        Payment, [payment_model.student_id, payment_model.payment_date]
+        Payment, [payment_model.student_id, payment_model.month, payment_model.year]
     )
     if payment:
-        raise AlreadyExists("Student already paid on this date.")
+        raise AlreadyExists("Student already paid for this month.")
 
     student = await session.get(Student, payment_model.student_id)
     if not student:
