@@ -60,7 +60,7 @@ async def get_payment_status(student_id: int, session: AsyncSession):
     att_rows = att_result.mappings().all()  # list of dicts {'month': ..., 'year': ...}
     attendance_set = {(int(r["month"]), int(r["year"])) for r in att_rows}
 
-    # get all payments for the student
+    # get all payments made by the student
     pay_stmt = select(
         Payment.month.label("month"),
         Payment.year.label("year"),
@@ -70,7 +70,9 @@ async def get_payment_status(student_id: int, session: AsyncSession):
     pay_result = await session.execute(pay_stmt)
     pay_rows = pay_result.mappings().all()
 
-    # aggregate payments by (month, year)
+    # Group payments by (month, year)
+    # Add up amounts if there are multiple payments in same month
+    # Keep the latest payment_date
     payment_map: Dict[Tuple[int, int], Dict[str, Any]] = {}
     for r in pay_rows:
         key = (int(r["month"]), int(r["year"]))
@@ -89,14 +91,18 @@ async def get_payment_status(student_id: int, session: AsyncSession):
         else:
             payment_map[key] = {"amount": amt, "payment_date": pdate}
 
-    # union attendance months and payment months, and build result rows
+    # Combine attendance months and payment months into one list
     all_keys = attendance_set | set(payment_map.keys())
 
-    # sort ascending by year then month
+    # Sort by year then month
     sorted_keys = sorted(all_keys, key=lambda ky: (ky[1], ky[0]))
 
+    # Build the final list of results
     results: List[Dict[str, Any]] = []
     for month, year in sorted_keys:
+        # Check if there is any payment recorded for this month and year.
+        # If there is, `pay` will be a dictionary with 'amount' and 'payment_date'.
+        # If not, `pay` will be None, meaning the student didn’t pay this month.
         pay = payment_map.get((month, year))
         results.append(
             {
