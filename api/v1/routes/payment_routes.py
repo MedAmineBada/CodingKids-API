@@ -15,6 +15,7 @@ from api.v1.services.payment_service import (
     add_payment,
     get_payments,
     get_payment_status,
+    edit_payment,
 )
 from db.session import get_session
 
@@ -38,3 +39,8 @@ async def get(student_id: int, session: AsyncSession = Depends(get_session)):
 @router.get("/status/{student_id}", status_code=status.HTTP_200_OK)
 async def get_status(student_id: int, session: AsyncSession = Depends(get_session)):
     return await get_payment_status(student_id, session)
+
+
+@router.patch("/edit", status_code=status.HTTP_200_OK)
+async def edit(model: PaymentModel, session: AsyncSession = Depends(get_session)):
+    return await edit_payment(model, session)

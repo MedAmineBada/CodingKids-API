@@ -1,5 +1,6 @@
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 
+from sqlalchemy import func
 from sqlmodel import select, extract
 from sqlmodel.ext.asyncio.session import AsyncSession
 
@@ -41,14 +42,16 @@ async def get_payments(student_id: int, session: AsyncSession):
 
 async def get_payment_status(student_id: int, session: AsyncSession):
     """
-    Return a list of dicts: { month, year, amount, payment_date, paid }
-    where `paid` is True if there's at least one payment for that month/year.
+    Return a list of dicts: { month, year, amount, payment_date, paid, attended_days }
+    where `paid` is True if there's at least one payment for that month/year and
+    `attended_days` is the total attendance rows for that month (0 if none).
     """
-    # get attendance in (month,year) pairs
+    # get attendance in (month,year) pairs with counts
     att_stmt = (
         select(
             extract("month", Attendance.attend_date).label("month"),
             extract("year", Attendance.attend_date).label("year"),
+            func.count(Attendance.attend_date).label("attended_days"),
         )
         .where(Attendance.student_id == student_id)
         .group_by(
@@ -57,8 +60,14 @@ async def get_payment_status(student_id: int, session: AsyncSession):
         )
     )
     att_result = await session.execute(att_stmt)
-    att_rows = att_result.mappings().all()  # list of dicts {'month': ..., 'year': ...}
-    attendance_set = {(int(r["month"]), int(r["year"])) for r in att_rows}
+    att_rows = (
+        att_result.mappings().all()
+    )  # list of dicts {'month': ..., 'year': ..., 'attended_days': ...}
+
+    # Build attendance map: (month, year) -> attended_days
+    attendance_map: Dict[Tuple[int, int], int] = {
+        (int(r["month"]), int(r["year"])): int(r["attended_days"]) for r in att_rows
+    }
 
     # get all payments made by the student
     pay_stmt = select(
@@ -92,7 +101,7 @@ async def get_payment_status(student_id: int, session: AsyncSession):
             payment_map[key] = {"amount": amt, "payment_date": pdate}
 
     # Combine attendance months and payment months into one list
-    all_keys = attendance_set | set(payment_map.keys())
+    all_keys = set(attendance_map.keys()) | set(payment_map.keys())
 
     # Sort by year then month
     sorted_keys = sorted(all_keys, key=lambda ky: (ky[1], ky[0]))
@@ -100,10 +109,8 @@ async def get_payment_status(student_id: int, session: AsyncSession):
     # Build the final list of results
     results: List[Dict[str, Any]] = []
     for month, year in sorted_keys:
-        # Check if there is any payment recorded for this month and year.
-        # If there is, `pay` will be a dictionary with 'amount' and 'payment_date'.
-        # If not, `pay` will be None, meaning the student didn’t pay this month.
         pay = payment_map.get((month, year))
+        attended_days = attendance_map.get((month, year), 0)
         results.append(
             {
                 "month": month,
@@ -111,7 +118,26 @@ async def get_payment_status(student_id: int, session: AsyncSession):
                 "amount": pay["amount"] if pay else None,
                 "payment_date": pay["payment_date"] if pay else None,
                 "paid": bool(pay),
+                "attended_days": attended_days,
             }
         )
 
     return results
+
+
+async def edit_payment(model: PaymentModel, session: AsyncSession):
+    student = await session.get(Student, model.student_id)
+    if not student:
+        raise NotFoundException("Student not found.")
+
+    payment = await session.get(Payment, (model.student_id, model.month, model.year))
+    if not payment:
+        raise NotFoundException("No payment found on this month and year.")
+
+    payment.amount = model.amount
+    payment.payment_date = model.payment_date
+
+    session.add(payment)
+    await session.commit()
+
+    return {"Success": "Payment updated."}

@@ -133,6 +133,6 @@ def valid_year(year: int) -> bool:
     today = date.today()
     if not isinstance(year, int):
         return False
-    if year > today.year:
+    if year > today.year + 1:
         return False
     return True
