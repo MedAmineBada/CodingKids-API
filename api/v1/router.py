@@ -12,6 +12,7 @@ from api.v1.routes import (
     attendance_routes,
     payment_routes,
     teacher_routes,
+    formation_routes,
 )
 
 router = APIRouter(prefix="/api/v1")
@@ -21,3 +22,4 @@ router.include_router(qr_routes.router)
 router.include_router(attendance_routes.router)
 router.include_router(payment_routes.router)
 router.include_router(teacher_routes.router)
+router.include_router(formation_routes.router)
