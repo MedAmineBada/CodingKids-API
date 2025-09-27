@@ -4,9 +4,10 @@ Formation_Record Table Model
 Defines the `Formation_Record` table with core fields and validation logic.
 """
 
+from typing import Optional
+
 from fastapi.openapi.models import Contact
 from pydantic import BaseModel, model_validator
-from sqlalchemy import Column, ForeignKey
 from sqlmodel import SQLModel, Field
 
 from api.v1.utils import valid_year
@@ -33,11 +34,6 @@ class FormationRecordModel(BaseModel):
 
 class FormationRecord(SQLModel, table=True):
     __tablename__ = "formation_record"
-    formation_id: int = Field(
-        sa_column=Column(
-            ForeignKey("formation.id", ondelete="CASCADE"),
-            primary_key=True,
-            index=True,
-        ),
-    )
+    formation_id: int = Field(primary_key=True)
     year: int = Field(primary_key=True)
+    formation_label: Optional[str] = Field(default=None, nullable=True)
