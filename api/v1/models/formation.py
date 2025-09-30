@@ -33,7 +33,7 @@ class FormationModel(BaseModel):
 
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
-        if not valid_date(getattr(m, "start_date")):
+        if not valid_date(getattr(m, "start_date"), year_offset=1):
             raise ValueError(f"Start date is not valid: {getattr(m, 'start_date')}")
         return m
 

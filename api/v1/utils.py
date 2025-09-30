@@ -107,18 +107,23 @@ def compress_img(src: str, dest: str):
         )
 
 
-def valid_date(input_date: date) -> bool:
-    today = date.today()
-    if input_date > today:
-        return False
-    diff = (
-        today.year
-        - input_date.year
-        - ((today.month, today.day) < (input_date.month, input_date.day))
-    )
-    if diff < 0:
-        return False
-    return True
+def valid_date(input_date: date, year_offset: int = 0) -> bool:
+    if year_offset == 0:
+        today = date.today()
+        if input_date > today:
+            return False
+        diff = (
+            today.year
+            - input_date.year
+            - ((today.month, today.day) < (input_date.month, input_date.day))
+        )
+        if diff < 0:
+            return False
+        return True
+    else:
+        today = date.today()
+        latest_valid_date = date(today.year + year_offset, 12, 31)
+        return input_date <= latest_valid_date
 
 
 def valid_month(month: int) -> bool:
