@@ -10,7 +10,7 @@ from sqlmodel import SQLModel
 from api.v1.models.attendance import Attendance
 from api.v1.models.cvfile import CVFile
 from api.v1.models.formation import Formation
-from api.v1.models.formation_record import FormationRecord
+from api.v1.models.formation_type import FormationType
 from api.v1.models.image import Image
 from api.v1.models.payment import Payment
 # Import models to ensure they are registered with SQLModel.metadata
@@ -29,7 +29,7 @@ _models = (
     Teacher,
     CVFile,
     Formation,
-    FormationRecord,
+    FormationType,
 )
 
 
