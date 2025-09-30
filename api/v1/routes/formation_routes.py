@@ -4,16 +4,23 @@ Formation route definition module.
 All routes that are associated with formations are here.
 """
 
+from typing import List
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
 from api.v1.models.formation import FormationModel
+from api.v1.models.formation_type import FormationType, FormationTypeModel
 from api.v1.services.formation_services import (
     add_formation,
     get_formations,
     delete_formation,
     update_formation,
+    get_formation_types,
+    add_formation_type,
+    delete_formation_type,
+    rename_formation_type,
 )
 from db.session import get_session
 
@@ -40,3 +47,29 @@ async def update(
     id: int, data: FormationModel, session: AsyncSession = Depends(get_session)
 ):
     return await update_formation(id, data, session)
+
+
+@router.get(
+    "/types", status_code=status.HTTP_200_OK, response_model=List[FormationType]
+)
+async def get_types(session: AsyncSession = Depends(get_session)):
+    return await get_formation_types(session)
+
+
+@router.post("/types/add", status_code=status.HTTP_201_CREATED)
+async def add_types(
+    data: FormationTypeModel, session: AsyncSession = Depends(get_session)
+):
+    return await add_formation_type(data, session)
+
+
+@router.delete("/types/delete/{id}", status_code=status.HTTP_200_OK)
+async def delete_type(id: int, session: AsyncSession = Depends(get_session)):
+    return await delete_formation_type(id, session)
+
+
+@router.patch("/types/rename/{id}", status_code=status.HTTP_200_OK)
+async def rename_type(
+    id: int, data: FormationTypeModel, session: AsyncSession = Depends(get_session)
+):
+    return await rename_formation_type(id, data, session)

@@ -8,6 +8,7 @@ from datetime import date
 from typing import Optional
 
 from pydantic import BaseModel, model_validator
+from sqlalchemy import Column, ForeignKey
 from sqlmodel import SQLModel, Field
 
 from api.v1.utils import valid_date
@@ -41,8 +42,11 @@ class FormationModel(BaseModel):
 class Formation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     formation_type: int = Field(
-        default=None,
-        nullable=False,
-        foreign_key="Formation_Type.id",
+        sa_column=Column(
+            ForeignKey("Formation_Type.id", ondelete="CASCADE", onupdate="CASCADE"),
+            default=None,
+            nullable=False,
+            index=True,
+        ),
     )
     start_date: date = Field(default=None, nullable=False)
