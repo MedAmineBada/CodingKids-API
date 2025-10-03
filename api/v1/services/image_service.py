@@ -1,6 +1,7 @@
 import io
 import os
 import time
+from os.path import exists
 
 from PIL import Image as PILImage
 from fastapi import UploadFile, HTTPException, BackgroundTasks
@@ -62,6 +63,8 @@ async def upload_image(
     and association to a student.
     """
     path = f"{EnvFile.STUDENT_IMAGE_SAVE_DIR}/AV{student_id}-{time.time()}.webp"
+    while exists(path):
+        path = f"{EnvFile.STUDENT_IMAGE_SAVE_DIR}/AV{student_id}-{time.time()}-DP-{chr(randint(64, 64 + 26)) + str(randint(0, 999))}.webp"
     st = await session.get(Student, student_id)
     if not st:
         raise NotFoundException("This student was not found.")

@@ -1,11 +1,14 @@
 import os
 import time
+from os.path import exists
 from pathlib import Path
+from random import randint
 from typing import Optional
 
 from fastapi import BackgroundTasks, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
+from starlette.responses import FileResponse
 
 from api.v1.exceptions import NotFoundException, UnprocessableEntityException
 from api.v1.models.cvfile import CVFile
@@ -28,7 +31,7 @@ def _background_save_pdf(data: bytes, path: str):
     os.replace(str(tmp_path), str(path_obj))
 
 
-async def upload_cv(
+async def upload_teacher_cv(
     teacher_id: int,
     bg_task: BackgroundTasks,
     file: UploadFile,
@@ -59,6 +62,11 @@ async def upload_cv(
     filename = f"T{teacher_id}-{timestamp}.pdf"
     new_path = str(Path(EnvFile.CV_SAVE_DIR) / filename)
 
+    # Verify Existance
+    while exists(new_path):
+        filename = f"T{teacher_id}-{timestamp}-DP-{chr(randint(64, 64 + 26)) + str(randint(0, 999))}.pdf"
+        new_path = str(Path(EnvFile.CV_SAVE_DIR) / filename)
+
     bg_task.add_task(_background_save_pdf, pdf_bytes, new_path)
 
     if old_cv:
@@ -84,3 +92,16 @@ async def upload_cv(
     await session.commit()
 
     return {"Successfully uploaded CV."}
+
+
+async def retrieve_cv(teacher_id: int, session: AsyncSession) -> FileResponse | None:
+    teacher = await session.get(Teacher, teacher_id)
+    if not teacher:
+        raise NotFoundException("This teacher was not found.")
+    if not teacher.cv:
+        return None
+    cv = await session.get(CVFile, teacher.cv)
+    if not cv:
+        return None
+
+    return FileResponse(path=cv.url, media_type="application/pdf")

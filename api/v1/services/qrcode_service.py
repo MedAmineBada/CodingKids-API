@@ -6,6 +6,8 @@ import base64
 import hashlib
 import os
 import time
+from os.path import exists
+from random import randint
 
 import cv2
 import numpy as np
@@ -107,10 +109,18 @@ def generate_qrcode(data: str, student_id: int) -> str:
 
     # Create a file path for temporary image and save it
     path = f"{EnvFile.QR_CODE_SAVE_DIR}/TEMP-{student_id}-{time.time()}.webp"
+    while exists(path):
+        filename = f"TEMP-{student_id}-{time.time()}-DP-{chr(randint(64, 64 + 26)) + str(randint(0, 999))}"
+        path = f"{EnvFile.QR_CODE_SAVE_DIR}/{filename}.webp"
+
     img.save(path)
 
     # Compress the image, return its path and remove the temporary image.
     comp_qr_path = f"{EnvFile.QR_CODE_SAVE_DIR}/QR{student_id}-{time.time()}.webp"
+    while exists(comp_qr_path):
+        filename = f"QR{student_id}-{time.time()}-DP-{chr(randint(64, 64 + 26)) + str(randint(0, 999))}"
+        comp_qr_path = f"{EnvFile.QR_CODE_SAVE_DIR}/{filename}.webp"
+
     compress_img(path, comp_qr_path)
 
     os.remove(path)

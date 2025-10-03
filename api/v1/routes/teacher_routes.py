@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_201_CREATED, HTTP_200_OK
 
 from api.v1.models.teacher import TeacherModel, Teacher
-from api.v1.services.cvfile_services import upload_cv
+from api.v1.services.cvfile_services import upload_teacher_cv, retrieve_cv
 from api.v1.services.teacher_service import (
     add_teacher,
     get_teachers,
@@ -50,11 +50,16 @@ async def get_by_id(teacher_id: int, session: AsyncSession = Depends(get_session
     return await get_teacher_by_id(teacher_id, session)
 
 
-@router.post("/{teacher_id}/cv/add", status_code=HTTP_201_CREATED)
-async def add_cv(
+@router.post("/{teacher_id}/cv/upload", status_code=HTTP_201_CREATED)
+async def upload_cv(
     teacher_id: int,
     bg_task: BackgroundTasks,
     file: UploadFile = File(...),
     session: AsyncSession = Depends(get_session),
 ):
-    return await upload_cv(teacher_id, bg_task, file, session)
+    return await upload_teacher_cv(teacher_id, bg_task, file, session)
+
+
+@router.get("/{teacher_id}/cv", status_code=HTTP_200_OK)
+async def get_cv(teacher_id: int, session: AsyncSession = Depends(get_session)):
+    return await retrieve_cv(teacher_id, session)
