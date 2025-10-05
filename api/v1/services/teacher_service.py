@@ -24,8 +24,7 @@ async def add_teacher(teacher_model: TeacherModel, session: AsyncSession):
 
     session.add(teacher)
     await session.commit()
-
-    return "Successfully added teacher"
+    return {"id": teacher.id}
 
 
 from typing import Optional

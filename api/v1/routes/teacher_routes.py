@@ -6,7 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_201_CREATED, HTTP_200_OK
 
 from api.v1.models.teacher import TeacherModel, Teacher
-from api.v1.services.cvfile_services import upload_teacher_cv, retrieve_cv
+from api.v1.services.cvfile_services import (
+    upload_teacher_cv,
+    retrieve_cv,
+    delete_teacher_cv,
+)
 from api.v1.services.teacher_service import (
     add_teacher,
     get_teachers,
@@ -63,3 +67,8 @@ async def upload_cv(
 @router.get("/{teacher_id}/cv", status_code=HTTP_200_OK)
 async def get_cv(teacher_id: int, session: AsyncSession = Depends(get_session)):
     return await retrieve_cv(teacher_id, session)
+
+
+@router.delete("/{id}/cv/delete", status_code=HTTP_200_OK)
+async def delete_cv(id: int, session: AsyncSession = Depends(get_session)):
+    return await delete_teacher_cv(id, session)

@@ -40,6 +40,8 @@ async def upload_teacher_cv(
     """
     Replace or add a teacher's CV and save locally as a PDF.
     """
+    if file.content_type != "application/pdf":
+        raise UnprocessableEntityException("The file must be pdf file.")
     teacher: Optional[Teacher] = await session.get(Teacher, teacher_id)
     if not teacher:
         raise NotFoundException("This teacher was not found.")
@@ -105,3 +107,29 @@ async def retrieve_cv(teacher_id: int, session: AsyncSession) -> FileResponse | 
         return None
 
     return FileResponse(path=cv.url, media_type="application/pdf")
+
+
+async def delete_teacher_cv(teacher_id: int, session: AsyncSession):
+    teacher = await session.get(Teacher, teacher_id)
+    if not teacher:
+        raise NotFoundException("This teacher was not found.")
+    if not teacher.cv:
+        return None
+
+    cv = await session.get(CVFile, teacher.cv)
+    if not cv:
+        raise NotFoundException("This CV was not found.")
+
+    if not exists(cv.url):
+        raise NotFoundException("This CV File was not found.")
+
+    teacher.cv = None
+    session.add(teacher)
+    await session.commit()
+
+    await session.delete(cv)
+    await session.commit()
+
+    os.remove(cv.url)
+
+    return {"Successfully deleted CV."}
