@@ -2,6 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select
 
 from api.v1.exceptions import AlreadyExists, NotFoundException
+from api.v1.models.formation import Formation
 from api.v1.models.teacher import TeacherModel, Teacher
 from api.v1.utils import clean_spaces, remove_spaces
 
@@ -79,6 +80,14 @@ async def delete_teacher(teacher_id: int, session: AsyncSession):
     if not teacher:
         raise NotFoundException("Teacher not found.")
     else:
+        stmt = select(Formation).where(Formation.teacher_id == teacher_id)
+        query = await session.execute(stmt)
+        res = query.scalars().all()
+        if res:
+            for f in res:
+                f.teacher_id = None
+        session.add_all(res)
+        await session.commit()
         await session.delete(teacher)
         await session.commit()
         return {"Teacher deleted."}

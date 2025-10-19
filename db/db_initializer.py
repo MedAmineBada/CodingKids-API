@@ -9,10 +9,12 @@ from sqlmodel import SQLModel
 
 from api.v1.models.attendance import Attendance
 from api.v1.models.cvfile import CVFile
+from api.v1.models.enrollment import Enrollment
 from api.v1.models.formation import Formation
 from api.v1.models.formation_type import FormationType
 from api.v1.models.image import Image
 from api.v1.models.payment import Payment
+
 # Import models to ensure they are registered with SQLModel.metadata
 from api.v1.models.qrcode import QRCode
 from api.v1.models.student import Student
@@ -30,6 +32,7 @@ _models = (
     CVFile,
     Formation,
     FormationType,
+    Enrollment,
 )
 
 

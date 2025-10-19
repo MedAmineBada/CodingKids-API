@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 
-from api.v1.models.formation import FormationModel
+from api.v1.models.formation import FormationModel, FormationAssignage
 from api.v1.models.formation_type import FormationType, FormationTypeModel
 from api.v1.services.formation_services import (
     add_formation,
@@ -21,6 +21,8 @@ from api.v1.services.formation_services import (
     add_formation_type,
     delete_formation_type,
     rename_formation_type,
+    unassign_formation,
+    assign_formation,
 )
 from db.session import get_session
 
@@ -73,3 +75,21 @@ async def rename_type(
     id: int, data: FormationTypeModel, session: AsyncSession = Depends(get_session)
 ):
     return await rename_formation_type(id, data, session)
+
+
+@router.patch("/unassign/{teacher_id}", status_code=status.HTTP_200_OK)
+async def unassign(
+    teacher_id: int,
+    formation: FormationAssignage,
+    session: AsyncSession = Depends(get_session),
+):
+    return await unassign_formation(teacher_id, formation.formation_id, session)
+
+
+@router.patch("/assign/{teacher_id}", status_code=status.HTTP_200_OK)
+async def assign(
+    teacher_id: int,
+    formation: FormationAssignage,
+    session: AsyncSession = Depends(get_session),
+):
+    return await assign_formation(teacher_id, formation.formation_id, session)

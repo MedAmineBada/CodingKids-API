@@ -18,9 +18,15 @@ from api.v1.services.student_service import (
     update_student,
     get_all_students,
     get_qr_code,
+    enroll,
+    remove_enrollment_from_student,
 )
 from db.session import get_session
 from . import image_routes
+from ..services.formation_services import (
+    get_student_enrolled_formations,
+    get_available_formations_for_student,
+)
 
 router = APIRouter(prefix="/students", tags=["Students"])
 router.include_router(image_routes.router)
@@ -87,3 +93,32 @@ async def get_code(id: int, session: AsyncSession = Depends(get_session)):
     Handles the retrieval of a student's QR Code.
     """
     return await get_qr_code(id, session)
+
+
+@router.post("/{student_id}/enroll/{formation_id}", status_code=status.HTTP_201_CREATED)
+async def enroll_student(
+    student_id: int, formation_id: int, session: AsyncSession = Depends(get_session)
+):
+    return await enroll(student_id, formation_id, session)
+
+
+@router.delete(
+    "/{student_id}/enrollments/{formation_id}/remove",
+    status_code=status.HTTP_200_OK,
+)
+async def remove_enrollment(
+    student_id: int, formation_id: int, session: AsyncSession = Depends(get_session)
+):
+    return await remove_enrollment_from_student(student_id, formation_id, session)
+
+
+@router.get("/{student_id}/enrollments", status_code=status.HTTP_200_OK)
+async def get_enrollments(
+    student_id: int, session: AsyncSession = Depends(get_session)
+):
+    return await get_student_enrolled_formations(session, student_id)
+
+
+@router.get("/{student_id}/enrollments/available", status_code=status.HTTP_200_OK)
+async def get_available(student_id: int, session: AsyncSession = Depends(get_session)):
+    return await get_available_formations_for_student(session, student_id)

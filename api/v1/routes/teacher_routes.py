@@ -11,6 +11,7 @@ from api.v1.services.cvfile_services import (
     retrieve_cv,
     delete_teacher_cv,
 )
+from api.v1.services.formation_services import get_formations_by_teacher
 from api.v1.services.teacher_service import (
     add_teacher,
     get_teachers,
@@ -72,3 +73,8 @@ async def get_cv(teacher_id: int, session: AsyncSession = Depends(get_session)):
 @router.delete("/{id}/cv/delete", status_code=HTTP_200_OK)
 async def delete_cv(id: int, session: AsyncSession = Depends(get_session)):
     return await delete_teacher_cv(id, session)
+
+
+@router.get("/{id}/formations", status_code=HTTP_200_OK)
+async def get_formations(id: int, session: AsyncSession = Depends(get_session)):
+    return await get_formations_by_teacher(id, session)

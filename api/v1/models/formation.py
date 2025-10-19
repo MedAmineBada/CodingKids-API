@@ -4,9 +4,10 @@ Formation Table Model
 Defines the `Formation` table with core fields and validation logic.
 """
 
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
+from fastapi.openapi.models import Contact
 from pydantic import BaseModel, model_validator
 from sqlalchemy import Column, ForeignKey
 from sqlmodel import SQLModel, Field
@@ -14,9 +15,14 @@ from sqlmodel import SQLModel, Field
 from api.v1.utils import valid_date
 
 
+class FormationAssignage(BaseModel):
+    formation_id: int
+
+
 class FormationModel(BaseModel):
     formation_type: int
     start_date: date
+    teacher_id: Optional[int] = None
 
     class Config:
         orm_mode = True
@@ -39,6 +45,25 @@ class FormationModel(BaseModel):
         return m
 
 
+class FormationOut(BaseModel):
+    id: int
+    title: Optional[str] = None
+    description: Optional[str] = None
+    # optional fields you might have on Formation
+    start_date: Optional[date] = None
+
+    class Config:
+        orm_mode = True
+
+
+class EnrolledFormationOut(BaseModel):
+    formation_id: int
+    enrolled_at: datetime
+
+    class Config:
+        orm_mode = True
+
+
 class Formation(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     formation_type: int = Field(
@@ -50,3 +75,11 @@ class Formation(SQLModel, table=True):
         ),
     )
     start_date: date = Field(default=None, nullable=False)
+    teacher_id: Optional[int] = Field(
+        sa_column=Column(
+            ForeignKey("teacher.id", onupdate="CASCADE"),
+            default=None,
+            nullable=True,
+            index=True,
+        ),
+    )

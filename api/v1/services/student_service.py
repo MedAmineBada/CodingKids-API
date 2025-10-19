@@ -13,7 +13,10 @@ from api.v1.exceptions import (
     StudentImageDeleteError,
     NotFoundException,
     QRCodeDeletionError,
+    AlreadyExists,
 )
+from api.v1.models.enrollment import Enrollment
+from api.v1.models.formation import Formation
 from api.v1.models.image import Image
 from api.v1.models.qrcode import QRCode
 from api.v1.models.student import Student, StudentCreate
@@ -199,3 +202,44 @@ async def get_qr_code(student_id: int, session: AsyncSession):
         media_type="image/webp",
         path=qrcode.url,
     )
+
+
+async def enroll(student_id, formation_id, session: AsyncSession):
+    st = await session.get(Student, student_id)
+    if not st:
+        raise NotFoundException("This student was not found.")
+
+    f = await session.get(Formation, formation_id)
+    if not f:
+        raise NotFoundException("This formation was not found.")
+
+    enr = await session.get(Enrollment, (student_id, formation_id))
+    if enr:
+        raise AlreadyExists("This enrollment was already created.")
+
+    enrollment: Enrollment = Enrollment()
+    enrollment.student_id = student_id
+    enrollment.formation_id = formation_id
+    session.add(enrollment)
+    await session.commit()
+    return {"Success": "Enrollment created"}
+
+
+async def remove_enrollment_from_student(
+    student_id, formation_id, session: AsyncSession
+):
+    st = await session.get(Student, student_id)
+    if not st:
+        raise NotFoundException("This student was not found.")
+
+    f = await session.get(Formation, formation_id)
+    if not f:
+        raise NotFoundException("This formation was not found.")
+
+    enr = await session.get(Enrollment, (student_id, formation_id))
+    if not enr:
+        raise AlreadyExists("This enrollment was not found.")
+
+    await session.delete(enr)
+    await session.commit()
+    return {"Success": "Enrollment deleted"}
