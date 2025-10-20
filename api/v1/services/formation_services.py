@@ -1,4 +1,3 @@
-from nbclient import execute
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import select, and_
 
