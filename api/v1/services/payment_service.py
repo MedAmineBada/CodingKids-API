@@ -141,3 +141,20 @@ async def edit_payment(model: PaymentModel, session: AsyncSession):
     await session.commit()
 
     return {"Success": "Payment updated."}
+
+
+async def delete_payment(payment: PaymentModel, session: AsyncSession):
+    student = await session.get(Student, payment.student_id)
+    if not student:
+        raise NotFoundException("Student not found.")
+
+    payment = await session.get(
+        Payment, (payment.student_id, payment.month, payment.year)
+    )
+    if not payment:
+        raise NotFoundException("No payment found on this month and year.")
+
+    await session.delete(payment)
+    await session.commit()
+
+    return {"Success": "Payment deleted."}

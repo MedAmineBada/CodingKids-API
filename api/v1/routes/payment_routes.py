@@ -16,6 +16,7 @@ from api.v1.services.payment_service import (
     get_payments,
     get_payment_status,
     edit_payment,
+    delete_payment,
 )
 from db.session import get_session
 
@@ -44,3 +45,8 @@ async def get_status(student_id: int, session: AsyncSession = Depends(get_sessio
 @router.patch("/edit", status_code=status.HTTP_200_OK)
 async def edit(model: PaymentModel, session: AsyncSession = Depends(get_session)):
     return await edit_payment(model, session)
+
+
+@router.delete("/delete", status_code=status.HTTP_200_OK)
+async def delete(model: PaymentModel, session: AsyncSession = Depends(get_session)):
+    return await delete_payment(model, session)
