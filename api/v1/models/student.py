@@ -19,8 +19,8 @@ from api.v1.utils import verif_str, verif_tel_number, valid_date
 class StudentCreate(BaseModel):
     name: str
     birth_date: date
-    tel1: str
-    tel2: str
+    tel1: Optional[str] = None
+    tel2: Optional[str] = None
     email: Optional[EmailStr] = None
 
     class Config:
@@ -39,13 +39,13 @@ class StudentCreate(BaseModel):
     def validate(self, m: "Contact") -> "Contact":
         """
         Validates that:
-        - All required fields (`name`, `tel1`, `tel2`, `birth_date`) are present
+        - All required fields (`name`, `birth_date`) are present
         - `name`, `tel1`,`tel2`, `birth_date` each meet their format requirements
         - `tel1` and `tel2` are not identical
         """
 
         missing = [
-            f for f in ("name", "birth_date", "tel1", "tel2") if getattr(m, f) is None
+            f for f in ("name", "birth_date") if getattr(m, f) is None
         ]
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
@@ -53,11 +53,11 @@ class StudentCreate(BaseModel):
             raise ValueError("Name does not meet requirements")
         if not valid_date(getattr(m, "birth_date")):
             raise DateNotValid()
-        if not verif_tel_number(getattr(m, "tel1")):
+        if m.tel1 and not verif_tel_number(getattr(m, "tel1")):
             raise ValueError("Telephone number 1 does not meet requirements")
-        if not verif_tel_number(getattr(m, "tel2")):
+        if m.tel2 and not verif_tel_number(getattr(m, "tel2")):
             raise ValueError("Telephone number 2 does not meet requirements")
-        if getattr(m, "tel1") == getattr(m, "tel2"):
+        if m.tel1 and m.tel2 and getattr(m, "tel1") == getattr(m, "tel2"):
             raise ValueError("Telephone numbers should not match")
         return m
 
@@ -66,8 +66,8 @@ class StudentRead(BaseModel):
     id: int
     name: str
     birth_date: date
-    tel1: str
-    tel2: str
+    tel1: Optional[str]
+    tel2: Optional[str]
     email: Optional[EmailStr]
 
     class Config:
@@ -78,8 +78,8 @@ class Student(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True, index=True)
     name: str = Field(..., nullable=False)
     birth_date: date = Field(..., nullable=False)
-    tel1: str = Field(..., max_length=8, nullable=False)
-    tel2: str = Field(..., max_length=8, nullable=False)
+    tel1: Optional[str] = Field(default=None, max_length=8)
+    tel2: Optional[str] = Field(default=None, max_length=8)
     email: Optional[EmailStr] = Field(default=None)
 
     # FK to Image table with cascade on delete/update

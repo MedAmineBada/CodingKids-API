@@ -5,6 +5,7 @@ from api.v1.exceptions import AlreadyExists, NotFoundException
 from api.v1.models.enrollment import Enrollment
 from api.v1.models.formation import FormationModel, Formation
 from api.v1.models.formation_type import FormationType, FormationTypeModel
+from api.v1.models.student import Student
 from api.v1.models.teacher import Teacher
 
 
@@ -250,3 +251,26 @@ async def get_available_formations_for_student(session: AsyncSession, student_id
         )
 
     return rows
+
+
+async def get_formation_students(session: AsyncSession, formation_id: int):
+    """
+    Get all students enrolled in a specific formation.
+
+    Args:
+        session: AsyncSession - The database session
+        formation_id: int - The ID of the formation
+
+    Returns:
+        List of Student objects enrolled in the formation
+    """
+    query = (
+        select(Student)
+        .join(Enrollment, Student.id == Enrollment.student_id)
+        .where(Enrollment.formation_id == formation_id)
+    )
+
+    result = await session.execute(query)
+    students = result.scalars().all()
+
+    return students

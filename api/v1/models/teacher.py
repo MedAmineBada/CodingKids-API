@@ -15,9 +15,9 @@ from api.v1.utils import verif_str, verif_tel_number, verif_cin
 
 
 class TeacherModel(BaseModel):
-    cin: str
+    cin: Optional[str] = None
     name: str
-    tel: str
+    tel: Optional[str] = None
     email: Optional[EmailStr] = None
     cv: Optional[int] = None
 
@@ -29,20 +29,19 @@ class TeacherModel(BaseModel):
     def validate(self, m: "Contact") -> "Contact":
         """
         Validates that:
-        - All required fields (`name`, `tel1`, `tel2`, `birth_date`) are present
-        - `name`, `tel1`,`tel2`, `birth_date` each meet their format requirements
-        - `tel1` and `tel2` are not identical
+        - All required fields (`name`) are present
+        - `name`, `tel`, `cin` each meet their format requirements
         """
 
-        missing = [f for f in ("cin", "name", "tel") if getattr(m, f) is None]
+        missing = [f for f in ("name",) if getattr(m, f) is None]
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
-        if not verif_cin(getattr(m, "cin")):
+        if m.cin and not verif_cin(getattr(m, "cin")):
             raise ValueError(f"Invalid cin value.")
         if not verif_str(getattr(m, "name")):
             raise ValueError("Name does not meet requirements")
-        if not verif_tel_number(getattr(m, "tel")):
-            raise ValueError("Telephone number 1 does not meet requirements")
+        if m.tel and not verif_tel_number(getattr(m, "tel")):
+            raise ValueError("Telephone number does not meet requirements")
         return m
 
 
@@ -50,9 +49,9 @@ class Teacher(SQLModel, table=True):
     id: int = Field(
         default=None, primary_key=True, index=True, max_length=8, nullable=False
     )
-    cin: str = Field(max_length=8, nullable=False, unique=True)
+    cin: Optional[str] = Field(default=None, max_length=8, unique=True)
     name: str = Field(..., nullable=False)
-    tel: str = Field(..., max_length=8, nullable=False)
+    tel: Optional[str] = Field(default=None, max_length=8)
     email: Optional[EmailStr] = Field(default=None)
     cv: Optional[int] = Field(
         default=None,

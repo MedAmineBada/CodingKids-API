@@ -11,11 +11,12 @@ async def add_teacher(teacher_model: TeacherModel, session: AsyncSession):
     """
     Creates a Teacher, then inserts him into the database.
     """
-    search_stmt = select(Teacher).where(Teacher.cin == teacher_model.cin)
-    search_query = await session.execute(search_stmt)
-    search_result = search_query.scalars().all()
-    if search_result:
-        raise AlreadyExists("Teacher already exists in database.")
+    if teacher_model.cin:
+        search_stmt = select(Teacher).where(Teacher.cin == teacher_model.cin)
+        search_query = await session.execute(search_stmt)
+        search_result = search_query.scalars().all()
+        if search_result:
+            raise AlreadyExists("Teacher already exists in database.")
 
     teacher = Teacher.model_validate(teacher_model)
     teacher.name = clean_spaces(teacher.name).title()
