@@ -24,6 +24,7 @@ from api.v1.services.formation_services import (
     unassign_formation,
     assign_formation,
     get_formation_students,
+    get_formation_details,
 )
 from db.session import get_session
 
@@ -99,3 +100,8 @@ async def assign(
 @router.get("/{id}/enrollments")
 async def get_students_enrolled(id: int, session: AsyncSession = Depends(get_session)):
     return await get_formation_students(session, formation_id=id)
+
+
+@router.get("/{id}/details")
+async def get_details(id: int, session: AsyncSession = Depends(get_session)):
+    return await get_formation_details(id, session)

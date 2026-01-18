@@ -83,3 +83,18 @@ class Formation(SQLModel, table=True):
             index=True,
         ),
     )
+
+
+class FormationWithTypeOut(BaseModel):
+    """Response model combining Formation and FormationType data."""
+
+    # Formation fields
+    id: int
+    formation_type_id: int
+    start_date: date
+    teacher_id: Optional[int]
+    # FormationType fields
+    type_label: str
+
+    class Config:
+        orm_mode = True

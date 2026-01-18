@@ -44,9 +44,7 @@ class StudentCreate(BaseModel):
         - `tel1` and `tel2` are not identical
         """
 
-        missing = [
-            f for f in ("name", "birth_date") if getattr(m, f) is None
-        ]
+        missing = [f for f in ("name", "birth_date") if getattr(m, f) is None]
         if missing:
             raise ValueError(f"Missing required fields: {', '.join(missing)}")
         if not verif_str(getattr(m, "name")):

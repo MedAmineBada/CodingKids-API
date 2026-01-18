@@ -3,6 +3,7 @@ from sqlmodel import select
 
 from api.v1.exceptions import AlreadyExists, NotFoundException
 from api.v1.models.formation import Formation
+from api.v1.models.sessions import Session, SessionModel
 from api.v1.models.teacher import TeacherModel, Teacher
 from api.v1.utils import clean_spaces, remove_spaces
 
@@ -123,3 +124,55 @@ async def get_teacher_by_id(teacher_id: int, session: AsyncSession):
         raise NotFoundException("Teacher not found.")
     else:
         return teacher
+
+
+async def get_sessions(id: int, session: AsyncSession):
+    teacher = await session.get(Teacher, id)
+    if not teacher:
+        raise NotFoundException("Teacher not found.")
+
+    stmt = (
+        select(Session.session_date)
+        .where(Session.teacher_id == id)
+        .order_by(Session.session_date.desc())
+    )
+    query = await session.execute(stmt)
+    res = query.scalars().all()
+
+    return res
+
+
+async def add_session(session_model: SessionModel, session: AsyncSession):
+    teacher = await session.get(Teacher, session_model.teacher_id)
+    if not teacher:
+        raise NotFoundException("Teacher not found.")
+    check = await session.get(
+        Session, (session_model.teacher_id, session_model.session_date)
+    )
+    if check:
+        raise AlreadyExists("Session already exists.")
+
+    entry = Session()
+    entry.teacher_id = session_model.teacher_id
+    entry.session_date = session_model.session_date
+
+    session.add(entry)
+    await session.commit()
+
+    return {"Success": "Session added."}
+
+
+async def remove_session(session_model: SessionModel, session: AsyncSession):
+    teacher = await session.get(Teacher, session_model.teacher_id)
+    if not teacher:
+        raise NotFoundException("Teacher not found.")
+    sess = await session.get(
+        Session, (session_model.teacher_id, session_model.session_date)
+    )
+    if not sess:
+        raise NotFoundException("Session not found.")
+
+    await session.delete(sess)
+    await session.commit()
+
+    return {"Success": "Session removed."}

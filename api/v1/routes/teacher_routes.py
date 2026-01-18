@@ -5,6 +5,7 @@ from fastapi.params import Query, File
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.status import HTTP_201_CREATED, HTTP_200_OK
 
+from api.v1.models.sessions import SessionModel
 from api.v1.models.teacher import TeacherModel, Teacher
 from api.v1.services.cvfile_services import (
     upload_teacher_cv,
@@ -18,6 +19,9 @@ from api.v1.services.teacher_service import (
     delete_teacher,
     update_teacher,
     get_teacher_by_id,
+    get_sessions,
+    add_session,
+    remove_session,
 )
 from db.session import get_session
 
@@ -78,3 +82,22 @@ async def delete_cv(id: int, session: AsyncSession = Depends(get_session)):
 @router.get("/{id}/formations", status_code=HTTP_200_OK)
 async def get_formations(id: int, session: AsyncSession = Depends(get_session)):
     return await get_formations_by_teacher(id, session)
+
+
+@router.get("/{id}/sessions", status_code=HTTP_200_OK)
+async def get_teacher_sessions(id: int, session: AsyncSession = Depends(get_session)):
+    return await get_sessions(id, session)
+
+
+@router.post("/sessions/add", status_code=HTTP_201_CREATED)
+async def add_teacher_session(
+    model: SessionModel, session: AsyncSession = Depends(get_session)
+):
+    return await add_session(model, session)
+
+
+@router.delete("/sessions/delete", status_code=HTTP_200_OK)
+async def remove_teacher_session(
+    model: SessionModel, session: AsyncSession = Depends(get_session)
+):
+    return await remove_session(model, session)

@@ -274,3 +274,32 @@ async def get_formation_students(session: AsyncSession, formation_id: int):
     students = result.scalars().all()
 
     return students
+
+
+async def get_formation_details(id: int, session: AsyncSession):
+    formation = await session.get(Formation, id)
+    if not formation:
+        raise NotFoundException("Formation not found.")
+
+    statement = (
+        select(Formation, FormationType, Teacher)
+        .join(FormationType, Formation.formation_type == FormationType.id)
+        .outerjoin(Teacher, Formation.teacher_id == Teacher.id)
+        .where(Formation.id == id)
+    )
+
+    req = await session.execute(statement)
+    result = req.first()
+
+    if not result:
+        raise NotFoundException("Formation not found.")
+
+    formation, formation_type, teacher = result
+
+    return {
+        "id": formation.id,
+        "formation_type_id": formation.formation_type,
+        "start_date": formation.start_date,
+        "teacher_name": (f"{teacher.name}" if teacher else None),
+        "type_label": formation_type.label,
+    }

@@ -17,6 +17,7 @@ from api.v1.models.payment import Payment
 
 # Import models to ensure they are registered with SQLModel.metadata
 from api.v1.models.qrcode import QRCode
+from api.v1.models.sessions import Session
 from api.v1.models.student import Student
 from api.v1.models.teacher import Teacher
 from .engine import creator_engine
@@ -33,6 +34,7 @@ _models = (
     Formation,
     FormationType,
     Enrollment,
+    Session,
 )
 
 
